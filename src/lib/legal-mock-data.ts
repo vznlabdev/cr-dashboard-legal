@@ -26,6 +26,9 @@ export const PRIMARY_CREATOR = {
   id: "cr-michael-chen",
 }
 
+/** Compliance checklist item status for contract detail. */
+export type ComplianceChecklistStatus = "ok" | "warn" | "fail"
+
 /** Insurance: Lloyd's of London / Lloyd's Lab consistently. */
 export const INSURANCE = {
   provider: "Lloyd's of London",
@@ -393,12 +396,12 @@ function getContractDetail(contractId: string) {
       effectiveDates: "2025-01-01 to 2025-12-31",
       insuranceStatus: "Active",
       complianceChecklist: [
-        { item: "NILP consent documented", status: "ok" as const },
-        { item: "Territory cleared", status: "ok" as const },
-        { item: "Payment received", status: "ok" as const },
-        { item: "AI disclosure on outputs", status: "warn" as const },
-        { item: "Renewal reminder scheduled", status: "ok" as const },
-      ],
+        { item: "NILP consent documented", status: "ok" satisfies ComplianceChecklistStatus },
+        { item: "Territory cleared", status: "ok" satisfies ComplianceChecklistStatus },
+        { item: "Payment received", status: "ok" satisfies ComplianceChecklistStatus },
+        { item: "AI disclosure on outputs", status: "warn" satisfies ComplianceChecklistStatus },
+        { item: "Renewal reminder scheduled", status: "ok" satisfies ComplianceChecklistStatus },
+      ] as { item: string; status: ComplianceChecklistStatus }[],
       riskAssessment: "Low",
       lastReviewDate: "2025-01-15",
     },
