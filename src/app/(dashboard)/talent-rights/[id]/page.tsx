@@ -1,7 +1,8 @@
 "use client"
 
-import { use, notFound } from "react"
+import { use } from "react"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import {
   Card,
   CardContent,
