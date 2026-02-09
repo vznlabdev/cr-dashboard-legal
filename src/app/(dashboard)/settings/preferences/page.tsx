@@ -111,7 +111,7 @@ export default function PreferencesPage() {
     <div className="space-y-6 animate-fade-in">
       <SettingsPageHeader
         title="Preferences"
-        description="Customize your experience with theme, language, and display settings"
+        description="Theme (light/dark), default view settings, date format"
       />
 
       {/* Appearance */}

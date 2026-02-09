@@ -11,6 +11,8 @@ import { getModelRiskScores, getModelRiskExplainability, calculatePremium } from
 import type { ModelRiskScore, RemediationItem, RiskFactor, PremiumCalculation } from "@/types/compliance"
 import { toast } from "sonner"
 import Link from "next/link"
+import { Skeleton } from "@/components/ui/skeleton"
+import { usePageTitle } from "@/hooks/usePageTitle"
 
 const riskClassColors: Record<string, string> = {
   Low: "#10b981", Moderate: "#f59e0b", Guarded: "#f97316",
@@ -29,15 +31,36 @@ const statusIcons: Record<string, typeof CheckCircle2> = {
   PASS: CheckCircle2, WARNING: AlertTriangle, FAIL: XCircle,
 }
 
+function getRecommendedCoverageText(riskClass: string): string {
+  const map: Record<string, string> = {
+    Low: "Low risk — standard limits acceptable. Recommend $1M minimum with annual review.",
+    Moderate: "Moderate risk — recommend $1.5M minimum coverage with quarterly MRS review.",
+    Guarded: "Guarded risk — recommend $2M minimum coverage with consent and disclosure monitoring.",
+    Elevated: "Elevated risk — recommend $2M minimum coverage with enhanced exclusivity monitoring and NIL verification.",
+    Severe: "Severe risk — recommend $2M minimum coverage with enhanced exclusivity monitoring and mandatory remediation before renewal.",
+    Critical: "Critical risk — recommend decline or minimum $2.5M with strict remediation timeline; consider enhanced exclusivity and jurisdiction-specific endorsements.",
+  }
+  return map[riskClass] ?? "Review risk class and jurisdiction for recommended limits."
+}
+
+function getLegalRecommendationText(riskClass: string, remediation: RemediationItem[]): string {
+  const actions = remediation.slice(0, 2).map((r) => r.action).join("; ")
+  const targetClass = riskClass === "Critical" || riskClass === "Severe" ? "Guarded" : riskClass === "Elevated" || riskClass === "Guarded" ? "Moderate" : "Low"
+  const timeline = remediation.length >= 2 ? "2–3 weeks" : remediation.length === 1 ? "1–2 weeks" : "1 week"
+  const priorityText = actions ? `Priority actions: ${actions}.` : "Priority actions: Obtain NIL consent and file jurisdiction-specific AI disclosure where required."
+  return `${priorityText} Target reduction from ${riskClass} to ${targetClass}. Estimated timeline: ${timeline}.`
+}
+
 export default function ScoringPage() {
   return (
-    <Suspense fallback={<ComplianceLayout title="Scoring"><div className="h-64 flex items-center justify-center text-sm text-muted-foreground">Loading...</div></ComplianceLayout>}>
+    <Suspense fallback={<ComplianceLayout title="Scoring"><div className="space-y-3"><Skeleton className="h-12 w-48 rounded-md" /><Skeleton className="h-64 rounded-md" /></div></ComplianceLayout>}>
       <ScoringPageContent />
     </Suspense>
   )
 }
 
 function ScoringPageContent() {
+  usePageTitle("Scoring")
   const searchParams = useSearchParams()
   const [allModels, setAllModels] = useState<ModelRiskScore[]>([])
   const [selectedModel, setSelectedModel] = useState<ModelRiskScore | null>(null)
@@ -190,6 +213,26 @@ function ScoringPageContent() {
                 </div>
               </div>
 
+              {/* Affected Contracts — which contracts use this model */}
+              {selectedModel.affectedContractIds && selectedModel.affectedContractIds.length > 0 && (
+                <div className="rounded-md border border-border/40 p-3">
+                  <div className="text-[13px] font-medium mb-2">Affected Contracts</div>
+                  <p className="text-[11px] text-muted-foreground mb-2">Contracts that use this AI model or tool.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedModel.affectedContractIds.map((contractId) => (
+                      <Link
+                        key={contractId}
+                        href={`/contracts/${contractId}`}
+                        className="inline-flex items-center gap-1 rounded-md border border-border/60 px-2 py-1.5 text-[12px] font-mono text-primary hover:bg-muted/50 hover:underline transition-colors"
+                      >
+                        {contractId}
+                        <ArrowRight className="h-3 w-3" />
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Risk Factor Audit Table */}
               <div className="rounded-md border border-border/40">
                 <div className="px-3 py-2 border-b border-border/30 text-[13px] font-medium">Risk Factor Audit</div>
@@ -340,6 +383,12 @@ function ScoringPageContent() {
                   <Button variant="outline" size="sm" className="h-6 text-[10px] mt-3" onClick={() => toast.success(`Projected MRS: ${projectedMRS} (${selectedModel.riskClass} → ${projectedMRS >= 90 ? "Low" : projectedMRS >= 80 ? "Moderate" : "Guarded"})`)}>
                     Apply All Remediations
                   </Button>
+                  <div className="mt-3 pt-3 border-t border-border/30">
+                    <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Legal Recommendation</div>
+                    <p className="text-[12px] text-foreground leading-relaxed">
+                      {getLegalRecommendationText(selectedModel.riskClass, remediation)}
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -399,12 +448,18 @@ function ScoringPageContent() {
                   <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={runPremiumCalc}>Generate Quote</Button>
                 </div>
                 {premResult && (
-                  <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap gap-4 text-[12px]">
-                    <div><span className="text-muted-foreground">Premium:</span> <span className="font-mono font-semibold">${premResult.premium.toLocaleString()}</span></div>
-                    <div><span className="text-muted-foreground">Deductible:</span> <span className="font-mono font-semibold">{premResult.deductible !== null ? `$${premResult.deductible.toLocaleString()}` : "N/A"}</span></div>
-                    <div><span className="text-muted-foreground">Max Capacity:</span> <span className="font-mono font-semibold">${premResult.maxCapacity.toLocaleString()}</span></div>
-                    <div><span className="text-muted-foreground">Risk Class:</span> <span className="font-medium" style={{ color: riskClassColors[premResult.riskClass] }}>{premResult.riskClass}</span></div>
-                  </div>
+                  <>
+                    <div className="mt-3 pt-3 border-t border-border/30 flex flex-wrap gap-4 text-[12px]">
+                      <div><span className="text-muted-foreground">Premium:</span> <span className="font-mono font-semibold">${premResult.premium.toLocaleString()}</span></div>
+                      <div><span className="text-muted-foreground">Deductible:</span> <span className="font-mono font-semibold">{premResult.deductible !== null ? `$${premResult.deductible.toLocaleString()}` : "N/A"}</span></div>
+                      <div><span className="text-muted-foreground">Max Capacity:</span> <span className="font-mono font-semibold">${premResult.maxCapacity.toLocaleString()}</span></div>
+                      <div><span className="text-muted-foreground">Risk Class:</span> <span className="font-medium" style={{ color: riskClassColors[premResult.riskClass] }}>{premResult.riskClass}</span></div>
+                    </div>
+                    <div className="mt-2 pt-2 border-t border-border/20">
+                      <div className="text-[11px] text-muted-foreground uppercase tracking-wider mb-1">Recommended Coverage</div>
+                      <p className="text-[12px] text-foreground">{getRecommendedCoverageText(premResult.riskClass)}</p>
+                    </div>
+                  </>
                 )}
                 <div className="text-[10px] text-muted-foreground mt-2 font-mono">
                   Premium = Limit x BaseRate x RiskMultiplier({selectedModel.premiumMultiplier}x) x JurisdictionMultiplier

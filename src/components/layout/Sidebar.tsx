@@ -5,18 +5,10 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   Scale,
-  Shield,
-  ShieldCheck,
   Settings,
   ChevronLeft,
   ChevronDown,
-  Ticket,
-  Palette,
-  Users,
   User,
-  FileImage,
-  FolderKanban,
-  GitBranch,
   CheckCircle2,
   Inbox,
   BarChart3,
@@ -40,6 +32,7 @@ import { AccountSwitcher } from "./AccountSwitcher"
 import { useSetup } from "@/lib/contexts/setup-context"
 import { useInbox } from "@/lib/contexts/inbox-context"
 import { getAllMenuItems } from "@/lib/settings-menu"
+import { isLegalApp } from "@/lib/legal-app"
 
 interface NavItem {
   title: string
@@ -54,74 +47,66 @@ interface NavSection {
   items: NavItem[]
 }
 
+// Legal user nav: Dashboard, Inbox, Contracts, Compliance, Review, Reports, Settings
+const legalNavSections: NavSection[] = [
+  {
+    items: [
+      { title: "Dashboard", href: "/", icon: LayoutDashboard },
+      { title: "Inbox", href: "/inbox", icon: Inbox, badge: 0 },
+    ],
+  },
+  {
+    label: "Contracts",
+    items: [
+      { title: "Contracts & Agreements", href: "/contracts", icon: FileText },
+      { title: "Talent Rights", href: "/talent-rights", icon: User },
+    ],
+  },
+  {
+    label: "Compliance",
+    items: [
+      { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+      { title: "Legal", href: "/legal", icon: Scale },
+      { title: "ACLAR Registry", href: "/compliance/aclar", icon: BookOpen },
+      { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+      { title: "Model Scoring", href: "/compliance/scoring", icon: Calculator },
+      { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+      { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+      { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
+      { title: "Reports & Export", href: "/reports", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "Review",
+    items: [
+      { title: "Legal Review Queue", href: "/review", icon: Scale },
+      { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    ],
+  },
+]
+
 // Base navigation sections (will be modified dynamically for setup)
 const baseNavSections: NavSection[] = [
   // Top nav (no label) — Inbox badge will be dynamically set
   {
     items: [
       { title: "Inbox",      href: "/inbox",      icon: Inbox,       badge: 0 },
-      { title: "Projects",   href: "/projects",   icon: FolderKanban },
-      { title: "Tasks",      href: "/tasks",      icon: Ticket },
-    ]
-  },
-  // Workspace section
-  {
-    label: "Workspace",
-    items: [
-      { title: "Assets",         href: "/creative/assets",        icon: FileImage },
-      { title: "Talent Rights",   href: "/creative/talent-rights",  icon: User },
-      { title: "Workflows",      href: "/workflows",               icon: GitBranch },
-      { title: "Brands",         href: "/creative/brands",         icon: Palette },
-      { title: "Team",           href: "/creative/team",           icon: Users },
     ]
   },
   // Compliance section
   {
     label: "Compliance",
     items: [
-      {
-        title: "Compliance",
-        href: "/compliance",
-        icon: ShieldCheck,
-        badge: 7,
-        children: [
-          { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
-          { title: "ALCAR Registry", href: "/compliance/alcar", icon: BookOpen },
-          { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
-          { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
-          { title: "Evidence", href: "/compliance/evidence", icon: Archive },
-          { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
-          { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
-        ],
-      },
-      {
-        title: "Legal",
-        href: "/legal",
-        icon: Scale,
-      },
-      {
-        title: "Insurance",
-        href: "/insurance",
-        icon: Shield,
-      },
-    ]
-  },
-  // Analytics section
-  {
-    label: "Analytics",
-    items: [
-      {
-        title: "Analytics",
-        href: "/reports",
-        icon: BarChart3,
-        children: [
-          { title: "Dashboards", href: "/analytics/dashboards", icon: LayoutDashboard },
-          { title: "Reports", href: "/reports", icon: BarChart3 },
-          { title: "Usage", href: "/analytics/usage", icon: FileText },
-          { title: "Audit Logs", href: "/analytics/audit", icon: FileSearch },
-        ],
-      },
-    ]
+      { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+      { title: "Legal", href: "/legal", icon: Scale },
+      { title: "ACLAR Registry", href: "/compliance/aclar", icon: BookOpen },
+      { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+      { title: "Model Scoring", href: "/compliance/scoring", icon: Calculator },
+      { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+      { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+      { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
+      { title: "Reports & Export", href: "/reports", icon: BarChart3 },
+    ],
   },
 ]
 
@@ -144,9 +129,6 @@ export function Sidebar() {
   // Auto-expand sections when on a child route so current page is visible
   useEffect(() => {
     const updates: Record<string, boolean> = {}
-    if (pathname === "/reports" || pathname.startsWith("/analytics/")) {
-      updates["/reports"] = true
-    }
     if (pathname.startsWith("/compliance")) {
       updates["/compliance"] = true
     }
@@ -157,31 +139,28 @@ export function Sidebar() {
 
   // Conditionally add setup item above Inbox (only after client mount to avoid hydration issues)
   const navSections = useMemo((): NavSection[] => {
-    // Don't show setup during SSR to avoid hydration mismatch
     if (!mounted) {
-      return baseNavSections
+      return isLegalApp() ? legalNavSections : baseNavSections
     }
-    
-    // Update Inbox badge with actual unread count
-    const sectionsWithInboxBadge = baseNavSections.map((section, idx) => {
-      if (idx === 0) { // Personal section
+    const base = isLegalApp() ? legalNavSections : baseNavSections
+    const sectionsWithInboxBadge = base.map((section, idx) => {
+      if (idx === 0) {
         return {
           ...section,
           items: section.items.map((item) =>
-            item.href === '/inbox' ? { ...item, badge: unreadCount } : item
+            item.href === "/inbox" ? { ...item, badge: unreadCount } : item
           ),
         }
       }
       return section
     })
-    
+    if (isLegalApp()) {
+      return sectionsWithInboxBadge
+    }
     const showSetup = !isSetupComplete && !isDismissed
-    
     if (!showSetup) {
       return sectionsWithInboxBadge
     }
-    
-    // Add setup item at the beginning
     const setupSection: NavSection = {
       items: [
         {
@@ -192,10 +171,7 @@ export function Sidebar() {
         },
       ],
     }
-    return [
-      setupSection,
-      ...sectionsWithInboxBadge,
-    ]
+    return [setupSection, ...sectionsWithInboxBadge]
   }, [mounted, isSetupComplete, isDismissed, progress, unreadCount])
   
   // Determine which logo to use based on theme
@@ -271,7 +247,7 @@ export function Sidebar() {
             <>
               {/* Back to app button */}
               <Link
-                href="/inbox"
+                href={isLegalApp() ? "/" : "/inbox"}
                 className={cn(
                   "flex items-center gap-2 rounded-md px-2 py-1.5 text-[13px] font-normal transition-all duration-150 mb-4",
                   "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

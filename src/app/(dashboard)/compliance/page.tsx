@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
+import { usePageTitle } from "@/hooks/usePageTitle"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
 import { USLegislationMap } from "@/components/compliance/USLegislationMap"
 import { WorldComplianceMap } from "@/components/compliance/WorldComplianceMap"
@@ -13,9 +14,11 @@ import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
+  LineChart, Line, CartesianGrid, Legend,
 } from "recharts"
 import { getComplianceOverview, getJurisdictions, getLegislationNews, getCountryJurisdictions, getGlobalLegislationNews } from "@/lib/compliance/api"
 import type { ComplianceOverview, JurisdictionProfile, LegislationNewsItem, ComplianceAlert, CountryJurisdictionProfile, GlobalLegislationNewsItem } from "@/types/compliance"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const riskClassColors: Record<string, string> = {
   Low: "#10b981",
@@ -77,6 +80,8 @@ export default function ComplianceDashboardPage() {
     [countryJurisdictions, selectedCountry]
   )
 
+  usePageTitle("Compliance")
+
   function handleStateClick(code: string) {
     setSelectedState(code)
     setStateDetailOpen(true)
@@ -100,7 +105,7 @@ export default function ComplianceDashboardPage() {
       <ComplianceLayout title="Compliance Dashboards">
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded-md bg-muted/50 animate-pulse" />
+            <Skeleton key={i} className="h-16 rounded-md" />
           ))}
         </div>
       </ComplianceLayout>
@@ -190,18 +195,18 @@ export default function ComplianceDashboardPage() {
         </div>
       </div>
 
-      {/* Metric Strip */}
+      {/* Metric Strip — legal counsel labels */}
       <MetricStrip
         metrics={[
-          { label: "Total Assets Monitored", value: overview.totalAssetsMonitored, trend: "up", trendValue: "+12" },
-          { label: "Flagged / Non-Compliant", value: overview.flaggedCount, trend: overview.flaggedCount > 5 ? "down" : "neutral" },
-          { label: "Avg Provenance Score", value: overview.avgProvenanceScore, trend: "up", trendValue: "+3" },
+          { label: "Contracts Monitored", value: overview.contractsMonitored ?? overview.totalAssetsMonitored, trend: "up", trendValue: "+12" },
+          { label: "Flagged Contracts", value: overview.flaggedContracts ?? overview.flaggedCount, trend: (overview.flaggedContracts ?? overview.flaggedCount) > 5 ? "down" : "neutral" },
+          { label: "Avg Compliance Score", value: overview.avgComplianceScore ?? overview.avgProvenanceScore, trend: "up", trendValue: "+3" },
           { label: "Avg MRS", value: overview.avgMRS, trend: "down", trendValue: "-2" },
-          { label: "Highest Risk Model", value: overview.highestRiskModel.name.split(" ")[0] },
+          { label: "Highest Risk", value: overview.highestRisk ?? overview.highestRiskModel.name.split(" ")[0] },
         ]}
       />
 
-      {/* Two-Column Row: Risk Distribution + Top Risk Models */}
+      {/* Two-Column Row: Risk Distribution + Top Risk Items */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Risk Distribution */}
         <div className="rounded-md border border-border/40 p-3">
@@ -243,40 +248,46 @@ export default function ComplianceDashboardPage() {
           </div>
         </div>
 
-        {/* Top Risk Models */}
+        {/* Top Risk Items — linked to contracts */}
         <div className="rounded-md border border-border/40 p-3">
-          <div className="text-[13px] font-medium mb-2">Top Risk Models</div>
+          <div className="text-[13px] font-medium mb-2">Top Risk Items</div>
           <div className="overflow-x-auto">
             <table className="w-full text-[12px]">
               <thead>
                 <tr className="text-muted-foreground text-left">
-                  <th className="pb-1.5 font-medium pr-3">Model</th>
+                  <th className="pb-1.5 font-medium pr-3">Item</th>
                   <th className="pb-1.5 font-medium pr-3 text-right">MRS</th>
                   <th className="pb-1.5 font-medium pr-3">Risk Class</th>
                   <th className="pb-1.5 font-medium">Top Risk Factor</th>
                 </tr>
               </thead>
               <tbody>
-                {overview.topRiskModels.map((model) => (
-                  <tr key={model.id} className="border-t border-border/20 hover:bg-muted/30 transition-colors">
+                {(overview.topRiskItems ?? overview.topRiskModels.map((m) => ({ id: m.id, label: m.name, contractId: "", mrs: m.mrs, riskClass: m.riskClass, topRiskFactor: m.topRiskFactor }))).map((item) => (
+                  <tr key={item.id} className="border-t border-border/20 hover:bg-muted/30 transition-colors">
                     <td className="py-1.5 pr-3">
-                      <Link href={`/compliance/scoring?model=${model.id}`} className="text-foreground hover:underline">
-                        {model.name}
-                      </Link>
+                      {"contractId" in item && item.contractId ? (
+                        <Link href={`/contracts/${item.contractId}`} className="text-foreground hover:underline">
+                          {item.label}
+                        </Link>
+                      ) : (
+                        <Link href={`/compliance/scoring?model=${item.id}`} className="text-foreground hover:underline">
+                          {item.label}
+                        </Link>
+                      )}
                     </td>
-                    <td className="py-1.5 pr-3 text-right font-mono font-medium">{model.mrs}</td>
+                    <td className="py-1.5 pr-3 text-right font-mono font-medium">{"mrs" in item ? item.mrs : (item as { mrs: number }).mrs}</td>
                     <td className="py-1.5 pr-3">
                       <span
                         className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium"
                         style={{
-                          color: riskClassColors[model.riskClass],
-                          backgroundColor: `${riskClassColors[model.riskClass]}15`,
+                          color: riskClassColors[(item as { riskClass?: string }).riskClass ?? ""],
+                          backgroundColor: `${riskClassColors[(item as { riskClass?: string }).riskClass ?? ""] || "#64748b"}15`,
                         }}
                       >
-                        {model.riskClass}
+                        {(item as { riskClass?: string }).riskClass ?? "—"}
                       </span>
                     </td>
-                    <td className="py-1.5 text-muted-foreground truncate max-w-[180px]">{model.topRiskFactor}</td>
+                    <td className="py-1.5 text-muted-foreground truncate max-w-[180px]">{(item as { topRiskFactor?: string }).topRiskFactor ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -284,6 +295,55 @@ export default function ComplianceDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Contract Compliance Summary — by brand */}
+      {overview.contractComplianceSummary && overview.contractComplianceSummary.length > 0 && (
+        <div className="rounded-md border border-border/40 p-3">
+          <div className="text-[13px] font-medium mb-2">Contract Compliance Summary</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px] max-w-[400px]">
+              <thead>
+                <tr className="text-muted-foreground text-left border-b border-border/20">
+                  <th className="pb-1.5 font-medium pr-4">Brand</th>
+                  <th className="pb-1.5 font-medium pr-3 text-right">Compliant</th>
+                  <th className="pb-1.5 font-medium text-right">Flagged</th>
+                </tr>
+              </thead>
+              <tbody>
+                {overview.contractComplianceSummary.map((row) => (
+                  <tr key={row.brand} className="border-t border-border/20">
+                    <td className="py-1.5 pr-4 font-medium">{row.brand}</td>
+                    <td className="py-1.5 pr-3 text-right font-mono text-emerald-600">{row.compliant}</td>
+                    <td className="py-1.5 text-right font-mono text-amber-600">{row.flagged}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Trend data chart — Compliance score & MRS over time */}
+      {overview.trendData && overview.trendData.length > 0 && (
+        <div className="rounded-md border border-border/40 p-3">
+          <div className="text-[13px] font-medium mb-2">Compliance & MRS Trend</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={overview.trendData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-muted/50" />
+              <XAxis dataKey="month" tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }} width={28} axisLine={false} tickLine={false} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "var(--color-background)", border: "1px solid var(--color-border)", borderRadius: "6px", fontSize: "11px" }}
+                formatter={(value: number) => [value, ""]}
+                labelFormatter={(label) => `Month: ${label}`}
+              />
+              <Legend wrapperStyle={{ fontSize: "11px" }} formatter={(value) => (value === "score" ? "Compliance Score" : "MRS")} />
+              <Line type="monotone" dataKey="score" name="score" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="mrs" name="mrs" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Alerts Table */}
       <div className="rounded-md border border-border/40">
@@ -303,6 +363,7 @@ export default function ComplianceDashboardPage() {
                 <th className="px-3 py-1.5 font-medium">Type</th>
                 <th className="px-3 py-1.5 font-medium w-[28px]">Sev</th>
                 <th className="px-3 py-1.5 font-medium w-[36px]">Jur</th>
+                <th className="px-3 py-1.5 font-medium">Linked Contract</th>
                 <th className="px-3 py-1.5 font-medium w-[60px] text-right">Actions</th>
               </tr>
             </thead>
@@ -560,14 +621,25 @@ function AlertRow({ alert }: { alert: ComplianceAlert }) {
         <span className={cn("inline-block h-2 w-2 rounded-full", severityColors[alert.severity])} title={alert.severity} />
       </td>
       <td className="px-3 py-1 font-mono text-[11px] text-muted-foreground">{alert.jurisdiction || "—"}</td>
+      <td className="px-3 py-1">
+        {alert.contractId ? (
+          <Link href={`/contracts/${alert.contractId}`} className="font-mono text-[11px] text-primary hover:underline">
+            {alert.contractId}
+          </Link>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </td>
       <td className="px-3 py-1 text-right">
         <div className="flex items-center justify-end gap-0.5">
           <button className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors" title="View">
             <Eye className="h-3.5 w-3.5" />
           </button>
-          <button className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors" title="Go to asset">
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          {alert.contractId && (
+            <Link href={`/contracts/${alert.contractId}`} className="p-1 rounded hover:bg-muted/50 text-muted-foreground hover:text-foreground transition-colors" title="Go to contract">
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
       </td>
     </tr>

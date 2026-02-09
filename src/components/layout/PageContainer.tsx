@@ -15,7 +15,7 @@ interface PageContainerProps {
  */
 export function PageContainer({ children, className }: PageContainerProps) {
   return (
-    <div className={cn("mx-auto w-full", className)}>
+    <div className={cn("mx-auto w-full animate-fade-in", className)}>
       {children}
     </div>
   )

@@ -2,7 +2,7 @@
 // Compliance Dashboard Types
 // ==============================================
 
-// --- Consent & Attribution (ALCAR) ---
+// --- Consent & Attribution (ACLAR) ---
 
 export type ConsentType = "NIL" | "AI_CONTENT" | "AD_DISCLOSURE"
 
@@ -30,10 +30,16 @@ export interface ConsentRecord {
   projectId?: string
   projectName?: string
   linkedAssetIds: string[]
+  /** Contract IDs that reference this consent (legal view). */
+  linkedContractIds?: string[]
+  /** For this entity: how many active contracts are covered by this consent vs total. */
+  contractCoverage?: { covered: number; total: number }
   auditTrail: AuditTrailEntry[]
   documents?: string[]
   verifiedBy?: string
   verifiedAt?: string
+  /** Legal counsel review notes. */
+  legalNotes?: string
 }
 
 // --- Asset Classification (KYA) ---
@@ -73,6 +79,7 @@ export interface ComplianceAlert {
   message: string
   assetId?: string
   modelId?: string
+  contractId?: string
   projectId?: string
   projectName?: string
   jurisdiction?: string
@@ -140,6 +147,8 @@ export interface ModelRiskScore {
   scoreHistory: ScoreChange[]
   jurisdictionImpacts: JurisdictionImpact[]
   calculatedAt: string
+  /** Contract IDs of contracts that use this AI model/tool (legal view). */
+  affectedContractIds?: string[]
 }
 
 export interface JurisdictionImpact {
@@ -187,6 +196,8 @@ export interface EvidenceCategoryData {
   capturedAt?: string
 }
 
+export type LegalRelevance = "Litigation Ready" | "Needs More Evidence" | "Insufficient"
+
 export interface EvidenceRecord {
   id: string
   incidentId: string
@@ -203,6 +214,14 @@ export interface EvidenceRecord {
   projectId?: string
   projectName?: string
   timeline: EvidenceTimelineEvent[]
+  /** Legal view: litigation readiness. */
+  legalRelevance?: LegalRelevance
+  /** Contract this incident relates to (link to /contracts/[id]). */
+  linkedContractId?: string
+  /** When true, evidence is locked from modification/deletion (demo). */
+  legalHold?: boolean
+  /** Counsel analysis / legal assessment. */
+  legalAssessment?: string
 }
 
 export interface EvidenceTimelineEvent {
@@ -227,6 +246,13 @@ export type LegislationStatus = "ENACTED" | "PROPOSED" | "IN_COMMITTEE" | "NONE"
 
 export type EnforcementIntensity = "Very High" | "High" | "Medium" | "Low" | "None"
 
+export type JurisdictionContractComplianceStatus = "compliant" | "non_compliant" | "needs_attention"
+
+export interface JurisdictionContractAffected {
+  contractId: string
+  complianceStatus: JurisdictionContractComplianceStatus
+}
+
 export interface JurisdictionProfile {
   state: string
   stateCode: string
@@ -240,6 +266,14 @@ export interface JurisdictionProfile {
   effectiveDate?: string
   statuteReference?: string
   summary?: string
+  /** Legal: number of active contracts that distribute to this jurisdiction. */
+  activeContractExposure?: number
+  /** Legal: contracts that distribute here with compliance status. */
+  contractsAffected?: JurisdictionContractAffected[]
+  /** Legal: auto-generated advisory text. */
+  legalAdvisory?: string
+  /** Legal: sum of potential penalties for non-compliant contracts (e.g. "Up to $127,000"). */
+  penaltyExposure?: string
 }
 
 export type LegislationNewsCategory = "NEW_LAW" | "AMENDMENT" | "PROPOSED" | "ENFORCEMENT_ACTION"
@@ -263,6 +297,14 @@ export interface ComplianceOverview {
   avgProvenanceScore: number
   avgMRS: number
   highestRiskModel: { name: string; mrs: number; riskClass: RiskClass }
+  /** Legal view: contracts monitored count (may equal or derive from assets). */
+  contractsMonitored?: number
+  /** Legal view: count of contracts with flagged / non-compliant items. */
+  flaggedContracts?: number
+  /** Legal view: same as avgProvenanceScore, labeled as Avg Compliance Score. */
+  avgComplianceScore?: number
+  /** Legal view: highest-risk item name (contract or model). */
+  highestRisk?: string
   riskDistribution: { riskClass: RiskClass; count: number; color: string }[]
   topRiskModels: {
     id: string
@@ -271,6 +313,15 @@ export interface ComplianceOverview {
     riskClass: RiskClass
     topRiskFactor: string
   }[]
+  /** Legal view: risk items linked to contracts; link to /contracts/[contractId]. */
+  topRiskItems?: {
+    id: string
+    label: string
+    contractId: string
+    mrs?: number
+    riskClass?: RiskClass
+    topRiskFactor?: string
+  }[]
   alerts: ComplianceAlert[]
   legislationSummary: {
     enacted: number
@@ -278,6 +329,8 @@ export interface ComplianceOverview {
     none: number
   }
   trendData: { month: string; score: number; mrs: number }[]
+  /** Legal view: compliance counts by brand. */
+  contractComplianceSummary?: { brand: string; compliant: number; flagged: number }[]
 }
 
 // --- Country / Global Jurisdictions ---
@@ -296,6 +349,14 @@ export interface CountryJurisdictionProfile {
   effectiveDate?: string
   statuteReference?: string
   summary?: string
+  /** Legal: number of active contracts that distribute to this jurisdiction. */
+  activeContractExposure?: number
+  /** Legal: contracts that distribute here with compliance status. */
+  contractsAffected?: JurisdictionContractAffected[]
+  /** Legal: auto-generated advisory text. */
+  legalAdvisory?: string
+  /** Legal: sum of potential penalties for non-compliant contracts. */
+  penaltyExposure?: string
 }
 
 export interface GlobalLegislationNewsItem {

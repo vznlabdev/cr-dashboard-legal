@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
+import { usePageTitle } from "@/hooks/usePageTitle"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -11,9 +12,10 @@ import {
 } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { getEvidenceRecords, getEvidenceRecord } from "@/lib/compliance/api"
-import type { EvidenceRecord, EvidenceCategoryKey, EvidenceCategoryData } from "@/types/compliance"
+import type { EvidenceRecord, EvidenceCategoryKey, EvidenceCategoryData, LegalRelevance } from "@/types/compliance"
 import { toast } from "sonner"
 import Link from "next/link"
+import { Lock } from "lucide-react"
 
 const categoryMeta: Record<EvidenceCategoryKey, { label: string; icon: typeof Fingerprint; short: string }> = {
   identity_posture: { label: "Identity & Device Posture", icon: Fingerprint, short: "Identity" },
@@ -35,12 +37,21 @@ const incidentStatusColors: Record<string, string> = {
   escalated: "text-red-600 bg-red-500/10",
 }
 
+const legalRelevanceColors: Record<LegalRelevance, string> = {
+  "Litigation Ready": "text-emerald-600 bg-emerald-500/10",
+  "Needs More Evidence": "text-amber-600 bg-amber-500/10",
+  "Insufficient": "text-red-600 bg-red-500/10",
+}
+
 export default function EvidencePage() {
+  usePageTitle("Evidence")
   const [records, setRecords] = useState<EvidenceRecord[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedRecord, setSelectedRecord] = useState<EvidenceRecord | null>(null)
   const [viewMode, setViewMode] = useState<"grid" | "timeline">("grid")
   const [searchQuery, setSearchQuery] = useState("")
+  const [legalHold, setLegalHold] = useState<Record<string, boolean>>({})
+  const [legalAssessmentDraft, setLegalAssessmentDraft] = useState("")
 
   useEffect(() => {
     setLoading(true)
@@ -59,8 +70,21 @@ export default function EvidencePage() {
 
   async function selectIncident(id: string) {
     const record = await getEvidenceRecord(id)
-    if (record) setSelectedRecord(record)
+    if (record) {
+      setSelectedRecord(record)
+      setLegalAssessmentDraft(record.legalAssessment ?? "")
+    }
   }
+  function setHoldForRecord(id: string, on: boolean) {
+    setLegalHold((prev) => ({ ...prev, [id]: on }))
+    toast.success(on ? "Legal hold enabled — evidence locked" : "Legal hold released")
+  }
+  function saveLegalAssessment() {
+    if (!selectedRecord) return
+    setSelectedRecord({ ...selectedRecord, legalAssessment: legalAssessmentDraft })
+    toast.success("Legal assessment saved")
+  }
+  const isHoldActive = (record: EvidenceRecord) => legalHold[record.id] ?? record.legalHold ?? false
 
   const allCategories: EvidenceCategoryKey[] = [
     "identity_posture", "application_url", "data_classification", "action_taken",
@@ -72,9 +96,9 @@ export default function EvidencePage() {
       <div className="flex gap-4">
         {/* Main content */}
         <div className="flex-1 min-w-0 space-y-4">
-          {/* Search */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+          {/* Search + Export Evidence Package */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <input
                 type="text"
@@ -84,6 +108,9 @@ export default function EvidencePage() {
                 className="w-full rounded-md border border-border/60 pl-7 pr-3 py-1.5 text-[12px] bg-background placeholder:text-muted-foreground"
               />
             </div>
+            <Button variant="outline" size="sm" className="h-7 text-[11px]" onClick={() => toast.success("Evidence package generated (legal-formatted report). Download link sent.")}>
+              <Download className="h-3.5 w-3.5 mr-1" /> Export Evidence Package
+            </Button>
           </div>
 
           {/* Incidents Table */}
@@ -98,6 +125,8 @@ export default function EvidencePage() {
                     <th className="px-3 py-1.5 font-medium">Asset / Model</th>
                     <th className="px-3 py-1.5 font-medium">Type</th>
                     <th className="px-3 py-1.5 font-medium">Completeness</th>
+                    <th className="px-3 py-1.5 font-medium">Legal Relevance</th>
+                    <th className="px-3 py-1.5 font-medium">Linked Contract</th>
                     <th className="px-3 py-1.5 font-medium">Status</th>
                     <th className="px-3 py-1.5 font-medium text-right">Actions</th>
                   </tr>
@@ -105,12 +134,14 @@ export default function EvidencePage() {
                 <tbody>
                   {loading ? (
                     Array.from({ length: 5 }).map((_, i) => (
-                      <tr key={i}><td colSpan={7} className="px-3 py-2"><div className="h-4 bg-muted/50 rounded animate-pulse" /></td></tr>
+                      <tr key={i}><td colSpan={9} className="px-3 py-2"><div className="h-4 bg-muted/50 rounded animate-pulse" /></td></tr>
                     ))
+                  ) : records.length === 0 ? (
+                    <tr><td colSpan={9} className="px-3 py-12 text-center text-sm text-muted-foreground">No evidence records match the current filters.</td></tr>
                   ) : records.map((record) => (
                     <tr
                       key={record.id}
-                      className={cn("border-b border-border/10 hover:bg-muted/30 transition-colors cursor-pointer h-8", selectedRecord?.id === record.id && "bg-muted/20")}
+                      className={cn("border-b border-border/10 hover:bg-muted/30 transition-colors cursor-pointer h-8", selectedRecord?.id === record.id && "bg-muted/20", isHoldActive(record) && "border-l-2 border-l-amber-500")}
                       onClick={() => selectIncident(record.id)}
                     >
                       <td className="px-3 py-1 font-mono text-[11px] font-medium">{record.incidentId}</td>
@@ -131,7 +162,26 @@ export default function EvidencePage() {
                         </div>
                       </td>
                       <td className="px-3 py-1">
-                        <span className={cn("inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium", incidentStatusColors[record.status])}>
+                        {record.legalRelevance ? (
+                          <span className={cn("inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium", legalRelevanceColors[record.legalRelevance])}>
+                            {record.legalRelevance}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-1">
+                        {record.linkedContractId ? (
+                          <Link href={`/contracts/${record.linkedContractId}`} className="font-mono text-[11px] text-primary hover:underline" onClick={(e) => e.stopPropagation()}>
+                            {record.linkedContractId}
+                          </Link>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-1">
+                        <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium", incidentStatusColors[record.status])}>
+                          {isHoldActive(record) && <Lock className="h-3 w-3" />}
                           {record.status}
                         </span>
                       </td>
@@ -150,24 +200,42 @@ export default function EvidencePage() {
           {/* Evidence Detail View */}
           {selectedRecord && (
             <>
-              {/* View mode toggle */}
-              <div className="flex items-center justify-between">
-                <span className="text-[13px] font-medium">Evidence: {selectedRecord.incidentId}</span>
-                <div className="flex items-center gap-1 rounded-md border border-border/40 p-0.5">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("grid")}
-                    className={cn("px-2 py-0.5 rounded text-[11px] transition-colors", viewMode === "grid" ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}
-                  >
-                    Grid
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode("timeline")}
-                    className={cn("px-2 py-0.5 rounded text-[11px] transition-colors", viewMode === "timeline" ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}
-                  >
-                    Timeline
-                  </button>
+              {/* View mode toggle + Legal Hold */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-[13px] font-medium">Evidence: {selectedRecord.incidentId}</span>
+                  {isHoldActive(selectedRecord) && (
+                    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium bg-amber-500/15 text-amber-600 border border-amber-500/30">
+                      <Lock className="h-3 w-3" /> Legal hold on — evidence locked
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="flex items-center gap-1.5 text-[11px] cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isHoldActive(selectedRecord)}
+                      onChange={(e) => setHoldForRecord(selectedRecord.id, e.target.checked)}
+                      className="rounded border-border"
+                    />
+                    Legal hold
+                  </label>
+                  <div className="flex items-center gap-1 rounded-md border border-border/40 p-0.5">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("grid")}
+                      className={cn("px-2 py-0.5 rounded text-[11px] transition-colors", viewMode === "grid" ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}
+                    >
+                      Grid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode("timeline")}
+                      className={cn("px-2 py-0.5 rounded text-[11px] transition-colors", viewMode === "timeline" ? "bg-muted font-medium" : "text-muted-foreground hover:text-foreground")}
+                    >
+                      Timeline
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -239,6 +307,27 @@ export default function EvidencePage() {
                 </div>
               )}
 
+              {/* Legal Assessment */}
+              <div className="rounded-md border border-border/40 p-3">
+                <div className="text-[13px] font-medium mb-2">Legal Assessment</div>
+                <p className="text-[11px] text-muted-foreground mb-2">Counsel analysis and notes for this incident.</p>
+                <textarea
+                  value={legalAssessmentDraft}
+                  onChange={(e) => setLegalAssessmentDraft(e.target.value)}
+                  placeholder="Add legal analysis, risk assessment, or litigation readiness notes..."
+                  className={cn("w-full min-h-[80px] rounded-md border px-2 py-1.5 text-[12px] bg-background placeholder:text-muted-foreground resize-y", isHoldActive(selectedRecord) && "opacity-70 pointer-events-none")}
+                  readOnly={isHoldActive(selectedRecord)}
+                />
+                {!isHoldActive(selectedRecord) && (
+                  <Button variant="outline" size="sm" className="h-7 text-[11px] mt-2" onClick={saveLegalAssessment}>
+                    Save assessment
+                  </Button>
+                )}
+                {isHoldActive(selectedRecord) && (
+                  <p className="text-[10px] text-amber-600 mt-1">Legal hold is on — edits disabled.</p>
+                )}
+              </div>
+
               {/* Export Panel */}
               <div className="rounded-md border border-border/40 p-3">
                 <div className="flex items-center justify-between">
@@ -246,6 +335,9 @@ export default function EvidencePage() {
                     <div className="text-[13px] font-medium">Export Dispute Package</div>
                     <div className="text-[11px] text-muted-foreground mt-0.5">
                       {selectedRecord.incidentId} &middot; {selectedRecord.completeness}/8 categories captured &middot; {selectedRecord.completenessPercent}% complete
+                      {selectedRecord.linkedContractId && (
+                        <> &middot; Contract: <Link href={`/contracts/${selectedRecord.linkedContractId}`} className="text-primary hover:underline font-mono">{selectedRecord.linkedContractId}</Link></>
+                      )}
                     </div>
                   </div>
                   <div className="flex gap-2">

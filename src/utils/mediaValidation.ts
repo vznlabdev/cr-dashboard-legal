@@ -99,7 +99,7 @@ export function validateTraining(
 }
 
 /**
- * Validate Creator DNA with authorization checks
+ * Validate Talent Rights (creator assignments) with authorization checks
  */
 export function validateCreatorDNA(
   creators: AssignedCreator[], 
@@ -108,7 +108,7 @@ export function validateCreatorDNA(
   const errors: string[] = []
   const warnings: string[] = []
   
-  // Creator DNA is always required
+  // Talent Rights (creator assignments) are always required
   if (creators.length === 0) {
     errors.push('At least one creator/persona must be assigned')
   }

@@ -20,6 +20,7 @@ import type {
   CountryJurisdictionProfile,
   GlobalLegislationNewsItem,
 } from "@/types/compliance"
+import { CONTRACT_IDS } from "@/lib/legal-mock-data"
 
 // ==============================================
 // MRS-to-Insurance Mapping Table
@@ -232,6 +233,7 @@ export const legislationNews: LegislationNewsItem[] = [
 // ==============================================
 
 const jurisdictions = ["NY", "CA", "TX", "FL", "IL", "MA"]
+const sampleContractIds: string[] = [...CONTRACT_IDS]
 const entityNames = [
   "Jordan Williams", "Sarah Chen", "Marcus Rodriguez", "Aisha Patel", "James O'Brien",
   "Nike Inc.", "Samsung Electronics", "Toyota Motor Corp", "Coca-Cola Company", "Apple Inc.",
@@ -260,6 +262,8 @@ function generateConsentRecords(): ConsentRecord[] {
       auditTrail.push({ id: `at-${i}-2`, timestamp: new Date(createdDate.getTime() + 86400000 * 3).toISOString(), actor: "Compliance Officer", action: "Verified", detail: "Document review passed" })
     }
 
+    const linkedContractIds = i < 18 ? sampleContractIds.slice(0, (i % 3) + 2) : undefined
+    const contractCoverage = i < 18 ? { covered: Math.min((i % 3) + 2, 6), total: 6 } : undefined
     records.push({
       id: `cr-${String(i + 1).padStart(4, "0")}`,
       type,
@@ -274,9 +278,12 @@ function generateConsentRecords(): ConsentRecord[] {
       projectId: `proj-${(i % 3) + 1}`,
       projectName: ["Nike Summer Campaign", "Samsung Product Launch", "Toyota Brand Refresh"][i % 3],
       linkedAssetIds: [`asset-${i + 1}`, `asset-${i + 51}`],
+      linkedContractIds,
+      contractCoverage,
       auditTrail,
       verifiedBy: status === "verified" ? "Legal Team" : undefined,
       verifiedAt: status === "verified" ? new Date(createdDate.getTime() + 86400000 * 3).toISOString() : undefined,
+      legalNotes: i === 0 ? "NIL scope confirmed for all Nike and Adidas campaigns." : undefined,
     })
   }
   return records
@@ -451,6 +458,10 @@ function generateModelRiskScores(): ModelRiskScore[] {
       { jurisdiction: "TN", lawType: "ELVIS Act", complianceStatus: m.name.includes("Voice") || m.name.includes("Music") ? "non_compliant" : "compliant", scorePenalty: m.name.includes("Voice") || m.name.includes("Music") ? -3 : 0, multiplierImpact: 1.5 },
     ]
 
+    const contractIdsForModel: string[] = [...CONTRACT_IDS]
+    const modelIndex = models.indexOf(m)
+    const affectedContractIds = contractIdsForModel.slice(0, (modelIndex % 3) + 2)
+
     return {
       id: `mrs-${m.id}`,
       modelId: m.id,
@@ -466,6 +477,7 @@ function generateModelRiskScores(): ModelRiskScore[] {
       scoreHistory,
       jurisdictionImpacts,
       calculatedAt: new Date(2025, 1, 1).toISOString(),
+      affectedContractIds,
     }
   })
 }
@@ -497,6 +509,8 @@ function generateEvidenceRecords(): EvidenceRecord[] {
     })
 
     const actualCaptured = Object.values(categories).filter((c) => c.status === "captured").length
+    const contractIdsForEvidence: string[] = [...CONTRACT_IDS]
+    const legalRelevance: EvidenceRecord["legalRelevance"] = actualCaptured >= 7 ? "Litigation Ready" : actualCaptured >= 5 ? "Needs More Evidence" : "Insufficient"
 
     const timeline: EvidenceTimelineEvent[] = evidenceCategories
       .filter((_, catIdx) => catIdx < capturedCount)
@@ -525,6 +539,10 @@ function generateEvidenceRecords(): EvidenceRecord[] {
       projectId: `proj-${(i % 3) + 1}`,
       projectName: ["Nike Summer Campaign", "Samsung Product Launch", "Toyota Brand Refresh"][i % 3],
       timeline,
+      legalRelevance,
+      linkedContractId: sampleContractIds[i % sampleContractIds.length],
+      legalHold: i < 2,
+      legalAssessment: i === 0 ? "NIL claim appears well-documented; consent chain and prompt metadata support brand position. Recommend retaining for 7 years." : undefined,
     }
   })
 }
@@ -555,13 +573,13 @@ function generateComplianceAlerts(): ComplianceAlert[] {
   assetProfiles.forEach((ap) => alerts.push(...ap.alerts))
   // Additional alerts
   const extra: ComplianceAlert[] = [
-    { id: "alert-leg-1", type: "legislation_change", severity: "high", message: "NY AI ad disclosure law takes effect — 12 assets require updated tags", jurisdiction: "NY", projectId: "proj-1", projectName: "Nike Summer Campaign", timestamp: new Date(2025, 0, 15).toISOString(), dismissed: false },
-    { id: "alert-leg-2", type: "legislation_change", severity: "medium", message: "CA AB 2602 enforcement update — review synthetic performer assets", jurisdiction: "CA", projectId: "proj-2", projectName: "Samsung Product Launch", timestamp: new Date(2025, 0, 20).toISOString(), dismissed: false },
-    { id: "alert-consent-1", type: "missing_consent", severity: "critical", message: "3 NIL consents expired — assets blocked from distribution", assetId: "asset-5", projectId: "proj-1", projectName: "Nike Summer Campaign", jurisdiction: "NY", timestamp: new Date(2025, 1, 1).toISOString(), dismissed: false },
-    { id: "alert-risk-1", type: "risk_threshold", severity: "high", message: "ElevenLabs Voice model MRS dropped below 60 — Elevated risk class", modelId: "model-5", timestamp: new Date(2025, 1, 2).toISOString(), dismissed: false },
-    { id: "alert-risk-2", type: "risk_threshold", severity: "critical", message: "Suno AI Music model MRS below 50 — Critical: decline coverage", modelId: "model-6", timestamp: new Date(2025, 1, 3).toISOString(), dismissed: false },
-    { id: "alert-disclosure-1", type: "disclosure_missing", severity: "high", message: "8 AI-generated ads missing required NY disclosure tags", jurisdiction: "NY", projectId: "proj-1", projectName: "Nike Summer Campaign", timestamp: new Date(2025, 1, 4).toISOString(), dismissed: false },
-    { id: "alert-jurisdiction-1", type: "jurisdiction_conflict", severity: "medium", message: "Campaign distributed to IL without BIPA biometric consent", jurisdiction: "IL", projectId: "proj-3", projectName: "Toyota Brand Refresh", timestamp: new Date(2025, 1, 3).toISOString(), dismissed: false },
+    { id: "alert-leg-1", type: "legislation_change", severity: "high", message: "NY AI ad disclosure law takes effect — 12 assets require updated tags", jurisdiction: "NY", projectId: "proj-1", projectName: "Nike Summer Campaign", contractId: "CR-2024-245-NIKE", timestamp: new Date(2025, 0, 15).toISOString(), dismissed: false },
+    { id: "alert-leg-2", type: "legislation_change", severity: "medium", message: "CA AB 2602 enforcement update — review synthetic performer assets", jurisdiction: "CA", projectId: "proj-2", projectName: "Samsung Product Launch", contractId: "CR-2024-203-SAMSUNG", timestamp: new Date(2025, 0, 20).toISOString(), dismissed: false },
+    { id: "alert-consent-1", type: "missing_consent", severity: "critical", message: "3 NIL consents expired — assets blocked from distribution", assetId: "asset-5", projectId: "proj-1", projectName: "Nike Summer Campaign", contractId: "CR-2024-245-NIKE", jurisdiction: "NY", timestamp: new Date(2025, 1, 1).toISOString(), dismissed: false },
+    { id: "alert-risk-1", type: "risk_threshold", severity: "high", message: "ElevenLabs Voice model MRS dropped below 60 — Elevated risk class", modelId: "model-5", contractId: "CR-2024-267-COKE", timestamp: new Date(2025, 1, 2).toISOString(), dismissed: false },
+    { id: "alert-risk-2", type: "risk_threshold", severity: "critical", message: "Suno AI Music model MRS below 50 — Critical: decline coverage", modelId: "model-6", contractId: "CR-2024-189-TOYOTA", timestamp: new Date(2025, 1, 3).toISOString(), dismissed: false },
+    { id: "alert-disclosure-1", type: "disclosure_missing", severity: "high", message: "8 AI-generated ads missing required NY disclosure tags", jurisdiction: "NY", projectId: "proj-1", projectName: "Nike Summer Campaign", contractId: "CR-2024-245-NIKE", timestamp: new Date(2025, 1, 4).toISOString(), dismissed: false },
+    { id: "alert-jurisdiction-1", type: "jurisdiction_conflict", severity: "medium", message: "Campaign distributed to IL without BIPA biometric consent", jurisdiction: "IL", projectId: "proj-3", projectName: "Toyota Brand Refresh", contractId: "CR-2024-189-TOYOTA", timestamp: new Date(2025, 1, 3).toISOString(), dismissed: false },
   ]
   alerts.push(...extra)
   return alerts.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
@@ -613,6 +631,26 @@ export const complianceOverview: ComplianceOverview = {
     { month: "Dec", score: 80, mrs: 78 },
     { month: "Jan", score: 82, mrs: 77 },
     { month: "Feb", score: 79, mrs: 73 },
+  ],
+  // Legal view
+  contractsMonitored: 243,
+  flaggedContracts: 18,
+  avgComplianceScore: Math.round(provenanceScores.reduce((sum, ps) => sum + ps.compositeScore, 0) / provenanceScores.length),
+  highestRisk: "CR-2024-189-TOYOTA (Toyota)",
+  topRiskItems: [
+    { id: "tri-1", label: "Suno AI Music — Toyota campaign", contractId: "CR-2024-189-TOYOTA", mrs: 48, riskClass: "Critical", topRiskFactor: "Consent gap" },
+    { id: "tri-2", label: "ElevenLabs Voice — Coca-Cola", contractId: "CR-2024-267-COKE", mrs: 58, riskClass: "Severe", topRiskFactor: "MRS below threshold" },
+    { id: "tri-3", label: "Nike Summer Campaign assets", contractId: "CR-2024-245-NIKE", mrs: 62, riskClass: "Elevated", topRiskFactor: "Disclosure missing" },
+    { id: "tri-4", label: "Samsung Product Launch", contractId: "CR-2024-203-SAMSUNG", mrs: 71, riskClass: "Guarded", topRiskFactor: "Jurisdiction review" },
+    { id: "tri-5", label: "Adidas NILP agreement", contractId: "CR-2023-156-ADIDAS", mrs: 78, riskClass: "Moderate", topRiskFactor: "Provenance" },
+  ],
+  contractComplianceSummary: [
+    { brand: "Nike", compliant: 2, flagged: 0 },
+    { brand: "Samsung", compliant: 1, flagged: 1 },
+    { brand: "Coca-Cola", compliant: 1, flagged: 1 },
+    { brand: "Toyota", compliant: 0, flagged: 1 },
+    { brand: "Adidas", compliant: 1, flagged: 0 },
+    { brand: "Apple", compliant: 1, flagged: 0 },
   ],
 }
 

@@ -14,27 +14,27 @@ export default function NotificationsPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <SettingsPageHeader
-        title="Notifications"
-        description="Manage how and when you receive notifications"
+        title="Notification Preferences"
+        description="Which alerts to receive"
       />
 
-      {/* Email Notifications */}
+      {/* Legal & compliance alerts */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            <CardTitle>Email Notifications</CardTitle>
+            <CardTitle>Legal & compliance alerts</CardTitle>
           </div>
           <CardDescription>
-            Choose what email notifications you want to receive
+            Choose which alerts you want to receive
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Task Assigned</Label>
+              <Label>Compliance alerts</Label>
               <p className="text-sm text-muted-foreground">
-                When a task is assigned to you
+                Portfolio-wide compliance issues, risk changes, open items
               </p>
             </div>
             <Switch defaultChecked />
@@ -44,9 +44,9 @@ export default function NotificationsPage() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Task Completed</Label>
+              <Label>Contract expirations</Label>
               <p className="text-sm text-muted-foreground">
-                When a task you&apos;re following is completed
+                Upcoming contract end dates and renewal reminders
               </p>
             </div>
             <Switch defaultChecked />
@@ -56,9 +56,9 @@ export default function NotificationsPage() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Project Updates</Label>
+              <Label>Review assignments</Label>
               <p className="text-sm text-muted-foreground">
-                Status changes on projects you&apos;re involved in
+                When an item is assigned to you for legal review
               </p>
             </div>
             <Switch defaultChecked />
@@ -68,57 +68,9 @@ export default function NotificationsPage() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Approval Requests</Label>
+              <Label>Legislation changes</Label>
               <p className="text-sm text-muted-foreground">
-                When your approval is needed on content
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Mentions</Label>
-              <p className="text-sm text-muted-foreground">
-                When someone mentions you in a comment
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Deadline Reminders</Label>
-              <p className="text-sm text-muted-foreground">
-                Reminders for upcoming deadlines
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>High-Risk Asset Alerts</Label>
-              <p className="text-sm text-muted-foreground">
-                Immediate alerts for high-risk compliance issues
-              </p>
-            </div>
-            <Switch defaultChecked />
-          </div>
-
-          <Separator />
-
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label>Daily Compliance Reports</Label>
-              <p className="text-sm text-muted-foreground">
-                Daily summary of compliance metrics
+                Updates on relevant legislation and jurisdiction changes
               </p>
             </div>
             <Switch defaultChecked />

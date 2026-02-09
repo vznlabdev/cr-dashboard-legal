@@ -3,6 +3,8 @@
 import { Sidebar } from "./Sidebar"
 import { Header } from "./Header"
 import { useSidebar } from "./sidebar-context"
+import { useAccount } from "@/contexts/account-context"
+import { isLegalApp } from "@/lib/legal-app"
 import { cn } from "@/lib/utils"
 
 interface MainLayoutProps {
@@ -11,6 +13,8 @@ interface MainLayoutProps {
 
 export function MainLayout({ children }: MainLayoutProps) {
   const { collapsed } = useSidebar()
+  const { currentCompany } = useAccount()
+  const legalApp = isLegalApp()
 
   return (
     <div className="relative flex min-h-screen overflow-x-hidden bg-background">
@@ -25,6 +29,12 @@ export function MainLayout({ children }: MainLayoutProps) {
           collapsed && "md:pl-16" // Desktop collapsed: smaller padding
         )}
       >
+        {/* Legal user: subtle top banner */}
+        {legalApp && (
+          <div className="sticky top-0 z-40 flex h-8 items-center justify-center border-b border-border/50 bg-muted/30 px-4 text-xs text-muted-foreground">
+            Legal Dashboard — {currentCompany?.name ?? "Organization"}
+          </div>
+        )}
         <Header />
         <main className="flex-1 p-4 md:p-6 overflow-x-hidden w-full">
           {children}

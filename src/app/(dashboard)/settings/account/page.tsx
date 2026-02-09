@@ -38,8 +38,8 @@ export default function AccountPage() {
   return (
     <div className="space-y-6 animate-fade-in">
       <SettingsPageHeader
-        title="Account"
-        description="Manage your account information and preferences"
+        title="Profile"
+        description="Personal info, avatar, and email"
       />
 
       {/* Profile Information */}

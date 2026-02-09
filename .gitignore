@@ -20,6 +20,9 @@
 # production
 /build
 
+# concatenation output (for Claude / handoff)
+cr-dashboard-legal-full.txt
+
 # misc
 .DS_Store
 *.pem

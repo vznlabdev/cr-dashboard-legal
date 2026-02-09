@@ -1,6 +1,7 @@
 "use client"
 
-import { Search, Bell, Moon, Sun, ChevronDown, Command } from "lucide-react"
+import { useState } from "react"
+import { Search, Bell, Moon, Sun, ChevronDown, Command, Scale } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NotificationCenter } from "@/components/cr"
 import {
@@ -17,9 +18,13 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { MobileNav } from "./MobileNav"
+import { isLegalApp } from "@/lib/legal-app"
+import { GlobalSearch } from "@/components/GlobalSearch"
 
 export function Header() {
   const { theme, setTheme } = useTheme()
+  const legalApp = isLegalApp()
+  const [searchOpen, setSearchOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border glass shadow-modern px-4 md:px-6">
@@ -28,20 +33,48 @@ export function Header() {
         <MobileNav />
       </div>
 
-      {/* Left side - Search */}
+      {/* Left side - Search + Legal role badge */}
       <div className="flex items-center gap-4 flex-1">
+        {legalApp && (
+          <Badge variant="secondary" className="hidden sm:inline-flex items-center gap-1.5 shrink-0">
+            <Scale className="h-3.5 w-3.5" />
+            Legal Counsel
+          </Badge>
+        )}
         <div className="relative w-full max-w-md hidden sm:block">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
-          <Input
-            type="search"
-            placeholder="Search projects, assets..."
-            className="pl-10 pr-16 w-full bg-background/80 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-primary/20"
-            disabled
-          />
-          <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-            <Command className="h-3 w-3" />
-            K
-          </kbd>
+          {legalApp ? (
+            <>
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="flex items-center w-full rounded-md border border-border/50 bg-background/80 backdrop-blur-sm hover:bg-accent/30 focus:bg-accent/30 focus:outline-none focus:ring-2 focus:ring-primary/20 text-left"
+              >
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
+                <span className="pl-10 pr-16 h-9 flex items-center text-sm text-muted-foreground w-full">
+                  Search contracts, creators, compliance…
+                </span>
+                <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                  <Command className="h-3 w-3" />
+                  K
+                </kbd>
+              </button>
+              <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+            </>
+          ) : (
+            <>
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none z-10" />
+              <Input
+                type="search"
+                placeholder="Search projects, assets..."
+                className="pl-10 pr-16 w-full bg-background/80 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-primary/20"
+                disabled
+              />
+              <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
+                <Command className="h-3 w-3" />
+                K
+              </kbd>
+            </>
+          )}
         </div>
       </div>
 
@@ -90,16 +123,33 @@ export function Header() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href="/settings">Settings</Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link href="/settings">Team Management</Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive cursor-pointer">
-              Log out
-            </DropdownMenuItem>
+            {legalApp ? (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/account">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings/notifications">Notification Preferences</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive cursor-pointer">
+                  Sign Out
+                </DropdownMenuItem>
+              </>
+            ) : (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Settings</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/settings">Team Management</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-destructive cursor-pointer">
+                  Log out
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

@@ -48,8 +48,10 @@ import { useChartTheme } from "@/components/cr/themed-chart-wrapper";
 import { EmptyState, TableSkeleton } from "@/components/cr";
 import { downloadCSV, prepareLegalIssuesForExport } from "@/lib/export-utils";
 import { PageContainer } from "@/components/layout/PageContainer";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
-export default function LegalPage() {
+export function LegalDashboardView() {
+  usePageTitle("Legal");
   const chartTheme = useChartTheme();
   const [isLoading, setIsLoading] = useState(false);
   const [actionDialog, setActionDialog] = useState<{
@@ -120,7 +122,7 @@ export default function LegalPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Legal Review Dashboard</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-            Compliance monitoring and IP conflict detection
+            Compliance monitoring and IP conflict detection for insurance legal counsel
           </p>
         </div>
         <Button 
@@ -529,6 +531,10 @@ export default function LegalPage() {
       />
     </PageContainer>
   );
+}
+
+export default function LegalPage() {
+  return <LegalDashboardView />;
 }
 
 // Mock data

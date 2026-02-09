@@ -136,7 +136,7 @@ export interface Task {
   };
   // Talent Rights - credited talent IDs (same pattern as Asset.creatorIds)
   creatorIds?: string[];  // Creators/talent credited on this task
-  // Media Manager data - assets, Creator DNA, training data, references
+  // Media Manager data - assets, Talent Rights, training data, references
   mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
   // Asset approval aggregation status
   assetApprovalStatus?: 'all_approved' | 'pending' | 'rejected' | 'none';  // Calculated based on linked assets

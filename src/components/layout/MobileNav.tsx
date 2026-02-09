@@ -5,15 +5,8 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
   Scale,
-  Shield,
-  ShieldCheck,
   Settings,
-  Ticket,
-  Palette,
-  Users,
   User,
-  FileImage,
-  FolderKanban,
   CheckCircle2,
   Inbox,
   BarChart3,
@@ -45,6 +38,7 @@ import { Separator } from "@/components/ui/separator"
 import { useSetup } from "@/lib/contexts/setup-context"
 import { useInbox } from "@/lib/contexts/inbox-context"
 import { getAllMenuItems } from "@/lib/settings-menu"
+import { isLegalApp } from "@/lib/legal-app"
 import { ChevronLeft } from "lucide-react"
 
 
@@ -61,102 +55,64 @@ interface NavSection {
   items: NavItem[]
 }
 
-// Base navigation sections (same as Sidebar.tsx)
-const baseNavSections: NavSection[] = [
-  // Personal section (Inbox badge will be dynamically set)
+// Legal user nav (same as Sidebar.tsx)
+const legalNavSections: NavSection[] = [
   {
     items: [
-      {
-        title: "Inbox",
-        href: "/inbox",
-        icon: Inbox,
-        badge: 0, // Will be replaced with actual unreadCount
-      },
-      {
-        title: "Tasks",
-        href: "/tasks",
-        icon: Ticket,
-      },
-    ]
+      { title: "Dashboard", href: "/", icon: LayoutDashboard },
+      { title: "Inbox", href: "/inbox", icon: Inbox, badge: 0 },
+    ],
   },
-  // Workspace section
   {
-    label: "Workspace",
+    label: "Contracts",
     items: [
-      {
-        title: "Projects",
-        href: "/projects",
-        icon: FolderKanban,
-      },
-      {
-        title: "Brands",
-        href: "/creative/brands",
-        icon: Palette,
-      },
-      {
-        title: "Assets",
-        href: "/creative/assets",
-        icon: FileImage,
-      },
-      {
-        title: "Talent Rights",
-        href: "/creative/talent-rights",
-        icon: User,
-      },
-      {
-        title: "Team",
-        href: "/creative/team",
-        icon: Users,
-      },
-    ]
+      { title: "Contracts & Agreements", href: "/contracts", icon: FileText },
+      { title: "Talent Rights", href: "/talent-rights", icon: User },
+    ],
   },
-  // Compliance section
   {
     label: "Compliance",
     items: [
-      {
-        title: "Compliance",
-        href: "/compliance",
-        icon: ShieldCheck,
-        badge: 7,
-        children: [
-          { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
-          { title: "ALCAR Registry", href: "/compliance/alcar", icon: BookOpen },
-          { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
-          { title: "Scoring", href: "/compliance/scoring", icon: Calculator },
-          { title: "Evidence", href: "/compliance/evidence", icon: Archive },
-          { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
-          { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
-        ],
-      },
-      {
-        title: "Legal",
-        href: "/legal",
-        icon: Scale,
-      },
-      {
-        title: "Insurance",
-        href: "/insurance",
-        icon: Shield,
-      },
-    ]
+      { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+      { title: "Legal", href: "/legal", icon: Scale },
+      { title: "ACLAR Registry", href: "/compliance/aclar", icon: BookOpen },
+      { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+      { title: "Model Scoring", href: "/compliance/scoring", icon: Calculator },
+      { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+      { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+      { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
+      { title: "Reports & Export", href: "/reports", icon: BarChart3 },
+    ],
   },
-  // Analytics section
   {
-    label: "Analytics",
+    label: "Review",
     items: [
-      {
-        title: "Analytics",
-        href: "/reports",
-        icon: BarChart3,
-        children: [
-          { title: "Dashboards", href: "/analytics/dashboards", icon: LayoutDashboard },
-          { title: "Reports", href: "/reports", icon: BarChart3 },
-          { title: "Usage", href: "/analytics/usage", icon: FileText },
-          { title: "Audit Logs", href: "/analytics/audit", icon: FileSearch },
-        ],
-      },
-    ]
+      { title: "Legal Review Queue", href: "/review", icon: Scale },
+      { title: "Approvals", href: "/approvals", icon: CheckCircle2 },
+    ],
+  },
+]
+
+// Base navigation sections (same as Sidebar.tsx)
+const baseNavSections: NavSection[] = [
+  {
+    items: [
+      { title: "Inbox", href: "/inbox", icon: Inbox, badge: 0 },
+    ],
+  },
+  {
+    label: "Compliance",
+    items: [
+      { title: "Dashboards", href: "/compliance", icon: LayoutDashboard },
+      { title: "Legal", href: "/legal", icon: Scale },
+      { title: "ACLAR Registry", href: "/compliance/aclar", icon: BookOpen },
+      { title: "KYA Profiler", href: "/compliance/kya", icon: ScanSearch },
+      { title: "Model Scoring", href: "/compliance/scoring", icon: Calculator },
+      { title: "Evidence", href: "/compliance/evidence", icon: Archive },
+      { title: "Jurisdictions", href: "/compliance/jurisdictions", icon: MapPin },
+      { title: "Distribution Risk", href: "/compliance/distribution-risk", icon: AlertTriangle },
+      { title: "Reports & Export", href: "/reports", icon: BarChart3 },
+    ],
   },
 ]
 
@@ -179,9 +135,6 @@ export function MobileNav() {
   // Auto-expand sections when on a child route so current page is visible
   useEffect(() => {
     const updates: Record<string, boolean> = {}
-    if (pathname === "/reports" || pathname.startsWith("/analytics/")) {
-      updates["/reports"] = true
-    }
     if (pathname.startsWith("/compliance")) {
       updates["/compliance"] = true
     }
@@ -192,46 +145,34 @@ export function MobileNav() {
 
   // Conditionally add setup item and update inbox badge (same logic as Sidebar)
   const navSections = useMemo((): NavSection[] => {
-    // Don't show setup during SSR to avoid hydration mismatch
     if (!mounted) {
-      return baseNavSections
+      return isLegalApp() ? legalNavSections : baseNavSections
     }
-
-    // Update Inbox badge with actual unread count
-    const sectionsWithInboxBadge: NavSection[] = baseNavSections.map((section, idx) => {
-      if (idx === 0) { // Personal section
+    const base = isLegalApp() ? legalNavSections : baseNavSections
+    const sectionsWithInboxBadge: NavSection[] = base.map((section, idx) => {
+      if (idx === 0) {
         return {
           ...section,
           items: section.items.map((item) =>
-            item.href === '/inbox' ? { ...item, badge: unreadCount } : item
+            item.href === "/inbox" ? { ...item, badge: unreadCount } : item
           ),
         }
       }
       return section
     })
-
+    if (isLegalApp()) {
+      return sectionsWithInboxBadge
+    }
     const showSetup = !isSetupComplete && !isDismissed
-
     if (!showSetup) {
       return sectionsWithInboxBadge
     }
-
-    // Add setup item at the beginning
     const setupSection: NavSection = {
       items: [
-        {
-          title: "Setup",
-          href: "/setup",
-          icon: CheckCircle2,
-          badge: progress,
-        },
+        { title: "Setup", href: "/setup", icon: CheckCircle2, badge: progress },
       ],
     }
-
-    return [
-      setupSection,
-      ...sectionsWithInboxBadge,
-    ]
+    return [setupSection, ...sectionsWithInboxBadge]
   }, [mounted, isSetupComplete, isDismissed, progress, unreadCount])
 
   // Determine which logo to use based on theme
@@ -276,7 +217,7 @@ export function MobileNav() {
             <>
               {/* Back to app button */}
               <Link
-                href="/inbox"
+                href={isLegalApp() ? "/" : "/inbox"}
                 onClick={() => setOpen(false)}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-3 text-sm font-medium transition-all duration-150 mb-4",

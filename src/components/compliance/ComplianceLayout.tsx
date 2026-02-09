@@ -11,10 +11,10 @@ interface ComplianceLayoutProps {
 }
 
 const breadcrumbMap: Record<string, string> = {
-  "/compliance": "Dashboards",
-  "/compliance/alcar": "ALCAR Registry",
+  "/compliance": "Dashboard",
+  "/compliance/aclar": "ACLAR Registry",
   "/compliance/kya": "KYA Profiler",
-  "/compliance/scoring": "Scoring",
+  "/compliance/scoring": "Risk Scoring",
   "/compliance/evidence": "Evidence",
   "/compliance/jurisdictions": "Jurisdictions",
   "/compliance/distribution-risk": "Distribution Risk",

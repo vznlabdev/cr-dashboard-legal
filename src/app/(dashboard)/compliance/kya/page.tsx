@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, Fragment } from "react"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
+import { usePageTitle } from "@/hooks/usePageTitle"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Search, ChevronDown, ChevronUp, AlertTriangle, CheckCircle2, Tag, ExternalLink, ScanSearch } from "lucide-react"
@@ -24,6 +25,7 @@ const riskColors: Record<string, string> = {
 }
 
 export default function KYAProfilerPage() {
+  usePageTitle("KYA Profiler")
   const [profiles, setProfiles] = useState<AssetProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -189,6 +191,8 @@ export default function KYAProfilerPage() {
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}><td colSpan={9} className="px-3 py-2"><div className="h-4 bg-muted/50 rounded animate-pulse" /></td></tr>
                 ))
+              ) : profiles.length === 0 ? (
+                <tr><td colSpan={9} className="px-3 py-12 text-center text-sm text-muted-foreground">No asset profiles match the current filters.</td></tr>
               ) : paginatedProfiles.map((profile) => (
                 <Fragment key={profile.id}>
                   <tr
@@ -252,8 +256,8 @@ export default function KYAProfilerPage() {
                               </div>
                             ))}
                             <div className="mt-2">
-                              <Link href={`/compliance/alcar`} className="text-foreground hover:underline flex items-center gap-1">
-                                <Tag className="h-3 w-3" /> ALCAR: {profile.linkedConsentIds.length} consent records
+                              <Link href="/compliance/aclar" className="text-foreground hover:underline flex items-center gap-1">
+                                <Tag className="h-3 w-3" /> ACLAR: {profile.linkedConsentIds.length} consent records
                               </Link>
                             </div>
                           </div>

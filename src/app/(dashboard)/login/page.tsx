@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { LogIn, Loader2, Mail, Lock } from "lucide-react"
 import Link from "next/link"
+import { isLegalApp } from "@/lib/legal-app"
 
-function AdminLoginForm() {
+function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,14 +45,11 @@ function AdminLoginForm() {
         throw new Error("Invalid email or password")
       }
 
-      // Set admin auth cookie
-      // In production, this would be set by the server after successful authentication
+      // Set auth cookie (admin or legal depending on app mode)
       document.cookie = `admin-auth-token=mock-admin-token-${Date.now()}; path=/; max-age=86400; SameSite=Lax`
 
       toast.success("Login successful!")
-
-      // Redirect to dashboard
-      router.push("/")
+      router.push(isLegalApp() ? "/legal" : "/")
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : "Invalid email or password"
@@ -66,10 +64,12 @@ function AdminLoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
-            Admin Login
+            {isLegalApp() ? "Legal counsel sign-in" : "Admin Login"}
           </CardTitle>
           <CardDescription className="text-center">
-            Sign in to your admin account
+            {isLegalApp()
+              ? "Creation Rights legal workspace. For insurance legal counsel (e.g. Lloyd's of London)."
+              : "Sign in to your admin account"}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,7 +81,7 @@ function AdminLoginForm() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@example.com"
+                  placeholder={isLegalApp() ? "legal@example.com" : "admin@example.com"}
                   className="pl-9"
                   value={formData.email}
                   onChange={(e) =>
@@ -140,14 +140,14 @@ function AdminLoginForm() {
   )
 }
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">
-              Admin Login
+              Sign-in
             </CardTitle>
             <CardDescription className="text-center">
               Loading...
@@ -156,7 +156,7 @@ export default function AdminLoginPage() {
         </Card>
       </div>
     }>
-      <AdminLoginForm />
+      <LoginForm />
     </Suspense>
   )
 }

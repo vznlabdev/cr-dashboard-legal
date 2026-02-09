@@ -185,11 +185,11 @@ export function MediaSummaryPreview({
             </div>
           )}
 
-          {/* Creator DNA */}
+          {/* Talent Rights */}
           {mediaData.creatorDNA.length > 0 && (
             <div>
               <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Creator DNA ({mediaData.creatorDNA.length}):
+                Talent Rights ({mediaData.creatorDNA.length}):
               </h4>
               <div className="space-y-1">
                 {mediaData.creatorDNA.map((creator) => (

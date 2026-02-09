@@ -2,14 +2,66 @@
 
 import { useState, useEffect, useMemo, useRef } from "react"
 import { ComplianceLayout } from "@/components/compliance/ComplianceLayout"
+import { usePageTitle } from "@/hooks/usePageTitle"
 import { USLegislationMap } from "@/components/compliance/USLegislationMap"
 import { WorldComplianceMap } from "@/components/compliance/WorldComplianceMap"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChevronDown, ChevronUp, Search, Bell, FileText, Globe, Flag } from "lucide-react"
+import Link from "next/link"
 import { getJurisdictions, getLegislationNews, calculateMultiStateRisk, getCountryJurisdictions, getGlobalLegislationNews } from "@/lib/compliance/api"
-import type { JurisdictionProfile, LegislationNewsItem, RiskClass, CountryJurisdictionProfile, GlobalLegislationNewsItem } from "@/types/compliance"
+import type { JurisdictionProfile, LegislationNewsItem, RiskClass, CountryJurisdictionProfile, GlobalLegislationNewsItem, JurisdictionContractAffected } from "@/types/compliance"
+
+const SAMPLE_CONTRACTS: JurisdictionContractAffected[] = [
+  { contractId: "CR-2024-245-NIKE", complianceStatus: "compliant" },
+  { contractId: "CR-2024-203-SAMSUNG", complianceStatus: "needs_attention" },
+  { contractId: "CR-2024-0891", complianceStatus: "compliant" },
+  { contractId: "CR-2024-0722", complianceStatus: "non_compliant" },
+  { contractId: "CR-2025-0007", complianceStatus: "compliant" },
+  { contractId: "CR-2024-0655", complianceStatus: "needs_attention" },
+]
+
+type LegalOverlay = {
+  activeContractExposure: number
+  contractsAffected: JurisdictionContractAffected[]
+  penaltyExposure: string
+}
+
+const US_LEGAL_OVERLAY: Record<string, LegalOverlay> = {
+  NY: { activeContractExposure: 38, contractsAffected: SAMPLE_CONTRACTS, penaltyExposure: "Up to $127,000 (non-compliant exposure)" },
+  CA: { activeContractExposure: 42, contractsAffected: SAMPLE_CONTRACTS.map((c) => (c.contractId === "CR-2024-0891" ? { ...c, complianceStatus: "non_compliant" as const } : c)), penaltyExposure: "Up to $312,000 (non-compliant exposure)" },
+  TN: { activeContractExposure: 12, contractsAffected: SAMPLE_CONTRACTS.slice(0, 4), penaltyExposure: "Up to $45,000" },
+  TX: { activeContractExposure: 28, contractsAffected: SAMPLE_CONTRACTS.slice(0, 5), penaltyExposure: "Up to $18,000" },
+  FL: { activeContractExposure: 19, contractsAffected: SAMPLE_CONTRACTS.slice(0, 3), penaltyExposure: "Up to $8,000" },
+  IL: { activeContractExposure: 24, contractsAffected: SAMPLE_CONTRACTS, penaltyExposure: "Up to $22,000" },
+  MA: { activeContractExposure: 15, contractsAffected: SAMPLE_CONTRACTS.slice(0, 4), penaltyExposure: "Up to $3,500" },
+  WA: { activeContractExposure: 11, contractsAffected: SAMPLE_CONTRACTS.slice(0, 3), penaltyExposure: "Up to $15,000" },
+  GA: { activeContractExposure: 8, contractsAffected: SAMPLE_CONTRACTS.slice(0, 2), penaltyExposure: "Proposed — TBD" },
+  CO: { activeContractExposure: 14, contractsAffected: SAMPLE_CONTRACTS.slice(0, 4), penaltyExposure: "CPA enforcement" },
+}
+
+const COUNTRY_LEGAL_OVERLAY: Record<string, LegalOverlay> = {
+  EU: { activeContractExposure: 56, contractsAffected: SAMPLE_CONTRACTS, penaltyExposure: "Up to €35M or 7% global turnover" },
+  GB: { activeContractExposure: 31, contractsAffected: SAMPLE_CONTRACTS.slice(0, 5), penaltyExposure: "Up to £18M" },
+  DE: { activeContractExposure: 22, contractsAffected: SAMPLE_CONTRACTS.slice(0, 4), penaltyExposure: "Up to €300,000" },
+  FR: { activeContractExposure: 18, contractsAffected: SAMPLE_CONTRACTS.slice(0, 4), penaltyExposure: "Up to €300,000" },
+  JP: { activeContractExposure: 12, contractsAffected: SAMPLE_CONTRACTS.slice(0, 3), penaltyExposure: "Under review" },
+}
+
+function getLegalAdvisory(
+  name: string,
+  overlay: LegalOverlay | undefined,
+  summaryOrCategories: string,
+  isUS: boolean
+): string {
+  if (!overlay) return ""
+  const needsAttention = overlay.contractsAffected.filter((c) => c.complianceStatus === "needs_attention").length
+  const nonCompliant = overlay.contractsAffected.filter((c) => c.complianceStatus === "non_compliant").length
+  const req = isUS ? "requires AI ad disclosure and NIL/likeness compliance for content distributed in this jurisdiction" : "applies EU AI Act and local disclosure requirements to content distributed in this jurisdiction"
+  const attention = needsAttention + nonCompliant > 0 ? `${needsAttention + nonCompliant} need filing attention.` : "All affected contracts are in compliance or under review."
+  return `${name} ${req}. ${overlay.activeContractExposure} active contracts are affected. ${attention}`
+}
 
 const enforcementColors: Record<string, string> = {
   "Very High": "text-red-600 bg-red-500/10",
@@ -29,6 +81,7 @@ const newsCategories: Record<string, string> = {
 type MapView = "world" | "us"
 
 export default function JurisdictionsPage() {
+  usePageTitle("Jurisdictions")
   const [mapView, setMapView] = useState<MapView>("world")
   // US data
   const [jurisdictions, setJurisdictions] = useState<JurisdictionProfile[]>([])
@@ -234,6 +287,29 @@ export default function JurisdictionsPage() {
                       {j.effectiveDate && <div className="flex justify-between"><span className="text-muted-foreground">Effective Date</span><span>{j.effectiveDate}</span></div>}
                       {j.statuteReference && <div className="flex justify-between"><span className="text-muted-foreground">Statute</span><span className="font-mono text-right max-w-[180px]">{j.statuteReference}</span></div>}
                       {j.summary && <p className="text-muted-foreground mt-1 leading-relaxed">{j.summary}</p>}
+                      {US_LEGAL_OVERLAY[j.stateCode] && (
+                        <>
+                          <div className="mt-2 pt-2 border-t border-border/20">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Legal Advisory</div>
+                            <p className="leading-relaxed">{getLegalAdvisory(j.state, US_LEGAL_OVERLAY[j.stateCode], j.summary ?? j.lawCategories.join(", "), true)}</p>
+                          </div>
+                          <div className="mt-1.5">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Contracts Affected</div>
+                            <div className="space-y-0.5">
+                              {US_LEGAL_OVERLAY[j.stateCode].contractsAffected.map((c) => (
+                                <div key={c.contractId} className="flex items-center justify-between gap-2">
+                                  <Link href={`/contracts/${c.contractId}`} className="font-mono text-primary hover:underline truncate">{c.contractId}</Link>
+                                  <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium", c.complianceStatus === "compliant" ? "text-emerald-600 bg-emerald-500/10" : c.complianceStatus === "needs_attention" ? "text-amber-600 bg-amber-500/10" : "text-red-600 bg-red-500/10")}>{c.complianceStatus.replace(/_/g, " ")}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mt-1.5">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Penalty Exposure Calculator</div>
+                            <p className="font-mono text-foreground">{US_LEGAL_OVERLAY[j.stateCode].penaltyExposure}</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -304,6 +380,29 @@ export default function JurisdictionsPage() {
                       {j.effectiveDate && <div className="flex justify-between"><span className="text-muted-foreground">Effective Date</span><span>{j.effectiveDate}</span></div>}
                       {j.statuteReference && <div className="flex justify-between"><span className="text-muted-foreground">Statute</span><span className="font-mono text-right max-w-[180px]">{j.statuteReference}</span></div>}
                       {j.summary && <p className="text-muted-foreground mt-1 leading-relaxed">{j.summary}</p>}
+                      {COUNTRY_LEGAL_OVERLAY[j.countryCode] && (
+                        <>
+                          <div className="mt-2 pt-2 border-t border-border/20">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Legal Advisory</div>
+                            <p className="leading-relaxed">{getLegalAdvisory(j.countryName, COUNTRY_LEGAL_OVERLAY[j.countryCode], j.summary ?? j.lawCategories.join(", "), false)}</p>
+                          </div>
+                          <div className="mt-1.5">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Contracts Affected</div>
+                            <div className="space-y-0.5">
+                              {COUNTRY_LEGAL_OVERLAY[j.countryCode].contractsAffected.map((c) => (
+                                <div key={c.contractId} className="flex items-center justify-between gap-2">
+                                  <Link href={`/contracts/${c.contractId}`} className="font-mono text-primary hover:underline truncate">{c.contractId}</Link>
+                                  <span className={cn("shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium", c.complianceStatus === "compliant" ? "text-emerald-600 bg-emerald-500/10" : c.complianceStatus === "needs_attention" ? "text-amber-600 bg-amber-500/10" : "text-red-600 bg-red-500/10")}>{c.complianceStatus.replace(/_/g, " ")}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="mt-1.5">
+                            <div className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">Penalty Exposure Calculator</div>
+                            <p className="font-mono text-foreground">{COUNTRY_LEGAL_OVERLAY[j.countryCode].penaltyExposure}</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -441,6 +540,7 @@ export default function JurisdictionsPage() {
                   <thead className="sticky top-0 bg-background">
                     <tr className="text-muted-foreground text-left border-b border-border/30">
                       <th className="px-3 py-1.5 font-medium">State</th>
+                      <th className="px-3 py-1.5 font-medium text-right">Active Contract Exposure</th>
                       <th className="px-3 py-1.5 font-medium">Law Categories</th>
                       <th className="px-3 py-1.5 font-medium">AI Ad Penalty</th>
                       <th className="px-3 py-1.5 font-medium">NIL Penalty</th>
@@ -454,6 +554,7 @@ export default function JurisdictionsPage() {
                     {filteredPenaltyStates.map((j) => (
                       <tr key={j.stateCode} className="border-b border-border/10 hover:bg-muted/20 transition-colors">
                         <td className="px-3 py-1.5 font-medium whitespace-nowrap">{j.state} <span className="text-muted-foreground font-mono">({j.stateCode})</span></td>
+                        <td className="px-3 py-1.5 text-right font-mono">{US_LEGAL_OVERLAY[j.stateCode]?.activeContractExposure ?? 0}</td>
                         <td className="px-3 py-1.5">
                           <div className="flex flex-wrap gap-0.5">
                             {j.lawCategories.length > 0 ? j.lawCategories.map((c) => (
@@ -490,6 +591,7 @@ export default function JurisdictionsPage() {
                   <thead className="sticky top-0 bg-background">
                     <tr className="text-muted-foreground text-left border-b border-border/30">
                       <th className="px-3 py-1.5 font-medium">Country</th>
+                      <th className="px-3 py-1.5 font-medium text-right">Active Contract Exposure</th>
                       <th className="px-3 py-1.5 font-medium">Region</th>
                       <th className="px-3 py-1.5 font-medium">Law Categories</th>
                       <th className="px-3 py-1.5 font-medium">AI Ad Penalty</th>
@@ -503,6 +605,7 @@ export default function JurisdictionsPage() {
                     {filteredPenaltyCountries.map((j) => (
                       <tr key={j.countryCode} className="border-b border-border/10 hover:bg-muted/20 transition-colors">
                         <td className="px-3 py-1.5 font-medium whitespace-nowrap">{j.countryName} <span className="text-muted-foreground font-mono">({j.countryCode})</span></td>
+                        <td className="px-3 py-1.5 text-right font-mono">{COUNTRY_LEGAL_OVERLAY[j.countryCode]?.activeContractExposure ?? 0}</td>
                         <td className="px-3 py-1.5 text-muted-foreground">{j.region}</td>
                         <td className="px-3 py-1.5">
                           <div className="flex flex-wrap gap-0.5">

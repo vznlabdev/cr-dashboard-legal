@@ -24,6 +24,9 @@ NEXT_PUBLIC_API_URL=http://localhost:4000/api
 
 # Optional: Environment
 NEXT_PUBLIC_ENVIRONMENT=development
+
+# Optional: Legal User Dashboard mode (shows only legal-counsel views for Lloyd's etc.)
+NEXT_PUBLIC_LEGAL_APP=true
 ```
 
 ### 3. Restart Development Server
@@ -74,6 +77,16 @@ if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'production') {
   // Enable analytics
 }
 ```
+
+---
+
+### `NEXT_PUBLIC_LEGAL_APP`
+
+**Type:** String (`"true"` to enable)  
+**Default:** unset / false  
+**Purpose:** Legal User Dashboard mode. When set to `"true"`, the app shows only legal-counsel views (Contracts & Agreements, Compliance & Risk, Talent Rights, Legal Workspace). Target audience: insurance legal counsel (e.g. Lloyd's of London). Login becomes "Legal counsel sign-in", home redirects to `/legal`, and sidebar shows only legal-relevant navigation.
+
+**Usage:** Add to `.env.local`: `NEXT_PUBLIC_LEGAL_APP=true`
 
 ---
 
