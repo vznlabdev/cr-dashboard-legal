@@ -1,0 +1,670 @@
+/**
+ * Centralized Type Definitions for Creation Rights Dashboard
+ * 
+ * This file contains all shared types used across the application.
+ * Import from here rather than duplicating type definitions.
+ */
+
+import type { MediaManagerData } from './mediaManager'
+import type { WorkflowInstance } from './workflows'
+
+// ==============================================
+// Core Domain Types
+// ==============================================
+
+export interface CopyrightCheckCredits {
+  monthlyQuota: number; // e.g., 100 checks/month included
+  quotaUsed: number; // How many used this month
+  quotaRemaining: number; // Calculated: monthlyQuota - quotaUsed
+  additionalCredits: number; // Purchased credits beyond quota
+  resetDate: Date; // When quota resets (1st of next month)
+  pricePerCheck: number; // Cost in $ for checks beyond quota
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  logo_url?: string;
+  branding_colors?: string;
+  timezone: string;
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+  copyrightCheckCredits?: CopyrightCheckCredits; // Copyright check credit tracking
+}
+
+/** Primary use classification for project distribution */
+export type ProjectDistributionPrimaryUse = 'advertising' | 'editorial' | 'entertainment' | 'internal';
+
+/** Distribution scope and channels for a project (optional JSON on Project) */
+export interface ProjectDistribution {
+  primary_use: ProjectDistributionPrimaryUse;
+  /** US state codes (e.g. ['CA', 'NY']) or ['ALL'] */
+  us_states: string[];
+  /** Country codes (e.g. ['UK', 'EU']) */
+  countries: string[];
+  /** Platform names (e.g. ['Meta', 'Google Ads', 'TikTok']) */
+  platforms: string[];
+  start_date: Date;
+  end_date?: Date;
+}
+
+export interface Project {
+  id: string;
+  companyId: string;  // belongs to Company
+  name: string;
+  description: string;
+  status: ProjectStatus;
+  priority?: 'urgent' | 'high' | 'medium' | 'low' | null; // null = no priority
+  assets: number;
+  compliance: number;
+  risk: RiskLevel;
+  updated: string;
+  createdDate: string;
+  owner: string;
+  members?: string[]; // Array of member names or IDs
+  targetDate?: string; // Target completion date (ISO string or formatted date)
+  creatorIds?: string[]; // Creators credited on this project
+  updates?: ProjectUpdate[]; // Project status updates
+  archived?: boolean; // Whether the project is archived
+  /** Optional distribution scope (primary use, regions, platforms, date range). Defaults to null if not set. */
+  distribution?: ProjectDistribution | null;
+}
+
+export interface Asset {
+  id: string;
+  projectId: string;
+  name: string;
+  type: ContentType;
+  aiMethod: AIMethod;
+  status: AssetStatus;
+  risk: RiskLevel;
+  compliance: number;
+  updated: string;
+  createdDate: string;
+  creator: string;
+  creatorIds?: string[]; // Creators credited on this asset
+}
+
+export interface TaskGroup {
+  id: string;
+  projectId: string;  // belongs to Project
+  name: string;
+  description?: string;
+  color: string;  // hex color for UI badges and pills
+  displayOrder: number;  // for sorting groups in UI
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Task {
+  id: string;
+  taskGroupId: string;  // belongs to Task Group
+  projectId: string;    // denormalized for quick queries
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  priority?: 'urgent' | 'high' | 'medium' | 'low';  // Task priority level
+  assignee?: string;
+  dueDate?: string;
+  createdDate: string;
+  updatedAt: string;  // ISO 8601 timestamp
+  mode?: 'manual' | 'generative' | 'assisted';
+  intendedUses?: string[];
+  deliverableType?: string;
+  targetAudience?: string;  // Target audience description
+  clientVisibility?: 'internal' | 'visible' | 'comment';  // Client visibility level
+  // Engagement metrics
+  commentsCount?: number;  // Number of comments on the task
+  attachmentsCount?: number;  // Number of attachments on the task
+  // Budget fields
+  estimatedHours?: number;  // Estimated hours for the task
+  isBillable?: boolean;  // Whether the task is billable
+  // AI Workflow fields
+  aiWorkflowStep?: number;  // Current step (1-7)
+  aiTool?: string;  // Selected AI tool name
+  aiTrackingLevel?: 'full' | 'partial' | 'none';  // Tracking level
+  completedSteps?: number[];  // Array of completed step numbers
+  // Clearance rejection fields
+  clearanceRejection?: {
+    rejectedBy: 'admin' | 'legal' | 'qa';  // Which clearance lane rejected
+    rejectedAsset: string;  // Name of rejected asset
+    rejectedAssetId?: string;  // ID of rejected asset
+    feedback: string;  // Feedback from reviewer
+    rejectedAt: string;  // ISO timestamp
+  };
+  // Talent Rights - credited talent IDs (same pattern as Asset.creatorIds)
+  creatorIds?: string[];  // Creators/talent credited on this task
+  // Media Manager data - assets, Creator DNA, training data, references
+  mediaData?: MediaManagerData;  // Optional - only exists after Media Manager is used
+  // Asset approval aggregation status
+  assetApprovalStatus?: 'all_approved' | 'pending' | 'rejected' | 'none';  // Calculated based on linked assets
+  // Workflows module
+  workflowTemplateId?: string
+  workflowInstance?: WorkflowInstance
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: NotificationType;
+  timestamp: Date;
+  read: boolean;
+  action?: NotificationAction;
+}
+
+// ==============================================
+// Enums & Union Types
+// ==============================================
+
+export type ProjectStatus = "Active" | "Review" | "Draft" | "Approved";
+export type AssetStatus = "Draft" | "Review" | "Approved" | "Rejected";
+export type TaskStatus = "submitted" | "compliance" | "assigned" | "production" | "qa_review" | "delivered";
+export type RiskLevel = "Low" | "Medium" | "High";
+export type ContentType = "Image" | "Video" | "Audio" | "Text" | "AR/VR";
+export type AIMethod = "AI Augmented" | "AI Generative" | "Multimodal";
+export type NotificationType = "info" | "success" | "warning" | "error";
+
+export interface NotificationAction {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+}
+
+// ==============================================
+// Project Updates
+// ==============================================
+
+export type ProjectHealth = "on-track" | "at-risk" | "off-track";
+
+export interface ProjectUpdate {
+  id: string;
+  projectId: string;
+  content: string;
+  healthStatus: ProjectHealth;
+  author: {
+    name: string;
+    initials: string;
+    color: string;
+  };
+  timestamp: Date;
+  metadata: {
+    status: ProjectStatus;
+    lead: string;
+    targetDate?: string;
+    progress?: string;
+  };
+}
+
+// ==============================================
+// User & Team Types
+// ==============================================
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  avatar?: string;
+}
+
+export type UserRole = 
+  | "Company Admin" 
+  | "Legal Reviewer" 
+  | "Insurance Analyst" 
+  | "Content Creator";
+
+export interface TeamMember {
+  name: string;
+  email: string;
+  initials: string;
+  role: string;
+  roleVariant: "default" | "secondary" | "outline" | "destructive";
+}
+
+// ==============================================
+// Legal & Compliance Types
+// ==============================================
+
+export interface LegalIssue {
+  id: number;
+  asset: string;
+  type: string;
+  severity: "Critical" | "High" | "Medium" | "Low";
+  project: string;
+  flagged: string;
+}
+
+export interface TalentAgreement {
+  name: string;
+  type: string;
+  status: string;
+  statusVariant: "default" | "secondary" | "outline" | "destructive";
+  expires: string;
+}
+
+// ==============================================
+// Integration Types
+// ==============================================
+
+export interface AITool {
+  id: string;
+  name: string;
+  category: string;
+  connected: boolean;
+  apiCalls?: number;
+  lastSync?: string;
+}
+
+export interface AIToolWhitelist {
+  name: string;
+  icon: string;
+  category: string;
+  status: string;
+  statusVariant: "default" | "secondary" | "outline" | "destructive";
+  riskLevel: string;
+  approved: boolean;
+}
+
+// ==============================================
+// API Response Types
+// ==============================================
+
+/**
+ * Standard API response wrapper
+ */
+export interface APIResponse<T = any> {
+  data?: T;
+  error?: APIError;
+  message?: string;
+  success?: boolean;
+}
+
+/**
+ * API error structure
+ */
+export interface APIError {
+  code: string;
+  message: string;
+  details?: any;
+  statusCode?: number;
+}
+
+/**
+ * Paginated response for list endpoints
+ */
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+}
+
+/**
+ * Specific API Response Types
+ */
+export interface ProjectsResponse {
+  projects: Project[];
+}
+
+export interface ProjectResponse {
+  project: Project;
+}
+
+export interface AssetsResponse {
+  assets: Asset[];
+}
+
+export interface AssetResponse {
+  asset: Asset;
+}
+
+export interface NotificationsResponse {
+  notifications: Notification[];
+}
+
+export interface DeleteResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface BulkOperationResponse {
+  updated?: number;
+  deleted?: number;
+  success: boolean;
+  items: string[];
+}
+
+// ==============================================
+// Form Types
+// ==============================================
+
+export interface CreateProjectForm {
+  name: string;
+  description: string;
+  owner: string;
+  status: ProjectStatus;
+  risk: RiskLevel;
+}
+
+export interface CreateAssetForm {
+  name: string;
+  type: ContentType;
+  aiMethod: AIMethod;
+  creator: string;
+  status: AssetStatus;
+  risk: RiskLevel;
+  compliance: number;
+}
+
+export interface InviteMemberForm {
+  name: string;
+  email: string;
+  role: UserRole;
+}
+
+// ==============================================
+// Chart Data Types
+// ==============================================
+
+export interface ChartDataPoint {
+  day?: string;
+  label?: string;
+  value: number;
+  [key: string]: any;
+}
+
+export interface ActivityTrendData {
+  day: string;
+  approved: number;
+  reviewed: number;
+}
+
+export interface RiskDistributionData {
+  name: string;
+  value: number;
+}
+
+// ==============================================
+// Export Types
+// ==============================================
+
+export interface ExportOptions {
+  format: "csv" | "json";
+  filename?: string;
+  includeHeaders?: boolean;
+}
+
+// ==============================================
+// Utility Types
+// ==============================================
+
+export type SortDirection = "asc" | "desc";
+export type SortField = "name" | "status" | "assets" | "compliance" | "risk" | "updated";
+
+// ==============================================
+// Component Props Types
+// ==============================================
+
+export interface DialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export interface TableColumn {
+  key: string;
+  label: string;
+  sortable?: boolean;
+  width?: string;
+}
+
+// ==============================================
+// Context Types (Re-exported for convenience)
+// ==============================================
+
+export interface DataContextType {
+  projects: Project[];
+  createProject: (project: Omit<Project, "id" | "assets" | "compliance" | "updated" | "createdDate">) => Promise<Project>;
+  updateProject: (id: string, updates: Partial<Project>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
+  getProjectById: (id: string) => Project | undefined;
+  
+  assets: Record<string, Asset[]>;
+  createAsset: (projectId: string, asset: Omit<Asset, "id" | "projectId" | "updated" | "createdDate">) => Promise<Asset>;
+  updateAsset: (projectId: string, assetId: string, updates: Partial<Asset>) => Promise<void>;
+  deleteAsset: (projectId: string, assetId: string) => Promise<void>;
+  getAssetById: (projectId: string, assetId: string) => Asset | undefined;
+  getProjectAssets: (projectId: string) => Asset[];
+}
+
+export interface NotificationContextType {
+  notifications: Notification[];
+  addNotification: (notification: Omit<Notification, "id" | "timestamp" | "read">) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearAll: () => void;
+  unreadCount: number;
+}
+
+// ==============================================
+// Insurance & Risk Types
+// ==============================================
+
+export type RiskGrade = "A" | "B" | "C" | "D" | "E" | "F";
+export type WorkflowStepStatus = "completed" | "incomplete" | "pending";
+export type IssueSeverity = "Critical" | "Urgent" | "Important";
+export type DistributionLevel = "Internal" | "Regional" | "National" | "Global";
+export type PortfolioMixType = "Pure Human" | "AI-Assisted" | "Hybrid" | "AI-Generated";
+
+/**
+ * 7-Step Compliance Workflow
+ */
+export interface WorkflowStep {
+  id: number;
+  name: string;
+  status: WorkflowStepStatus;
+  completedAt?: Date;
+  evidence?: WorkflowEvidence[];
+}
+
+export interface WorkflowEvidence {
+  id: string;
+  type: "log" | "file" | "approval" | "certificate";
+  name: string;
+  url?: string;
+  timestamp: Date;
+}
+
+/**
+ * Workflow completion tracking
+ */
+export interface WorkflowCompletion {
+  completedSteps: number;
+  totalSteps: number;
+  completionRate: number; // 0-100
+  riskLevel: RiskLevel;
+  steps: WorkflowStep[];
+}
+
+/**
+ * Five Key Risk Scores
+ */
+export interface RiskScores {
+  documentation: number; // 0-100, target >85
+  toolSafety: number; // 0-100, target >90
+  copyrightCheck: number; // 0-100, target >95
+  aiModelTrust: number; // 0-100, target >80
+  trainingDataQuality: number; // 0-100, target >75 (highest weight)
+}
+
+/**
+ * Portfolio Risk Metrics
+ */
+export interface PortfolioRiskMetrics {
+  riskGrade: RiskGrade;
+  riskScore: number; // 0-100 (weighted from 5 key metrics)
+  tiv: number; // Total Insured Value
+  eal: number; // Expected Annual Loss
+  liability: number; // Liability Estimate
+  riskScores: RiskScores;
+  workflowCompletion: WorkflowCompletion;
+}
+
+/**
+ * Portfolio Mix & Risk Multipliers
+ */
+export interface PortfolioMix {
+  type: PortfolioMixType;
+  count: number;
+  percentage: number;
+  riskMultiplier: number; // 1.0x, 1.5x, 2.0x, 3.0x
+  totalValue: number;
+}
+
+/**
+ * Issues & Alerts
+ */
+export interface InsuranceIssue {
+  id: string;
+  title: string;
+  description: string;
+  severity: IssueSeverity;
+  category: "copyright" | "tool" | "license" | "workflow" | "training-data" | "creator-rights";
+  assetId?: string;
+  projectId?: string;
+  creatorId?: string;
+  dueDate?: Date;
+  createdAt: Date;
+  resolved: boolean;
+}
+
+/**
+ * Client Concentration Risk
+ */
+export interface ClientConcentration {
+  clientId: string;
+  clientName: string;
+  insuredValue: number;
+  percentageOfPortfolio: number;
+  riskFlagged: boolean; // true if >30%
+  assetCount: number;
+}
+
+/**
+ * Asset Financial Breakdown
+ */
+export interface AssetFinancialBreakdown {
+  baseValue: number;
+  riskMultiplier: number;
+  distributionMultiplier: number;
+  finalInsuredValue: number; // TIV for this asset
+}
+
+/**
+ * Enhanced Asset with Insurance Data
+ */
+export interface InsuranceAsset extends Asset {
+  workflow: WorkflowCompletion;
+  financialBreakdown: AssetFinancialBreakdown;
+  riskScores: RiskScores;
+  distributionLevel: DistributionLevel;
+  approvalStatus: "Approved" | "Blocked";
+  similarityScore?: number; // 0-100, <30% = pass
+  legalApproval?: boolean;
+  toolUsed?: string;
+  modelUsed?: string;
+  trainingDataSources?: string[];
+  promptRecord?: string;
+  outputVersions?: string[];
+}
+
+// ==============================================
+// Inbox & Activity Feed Types
+// ==============================================
+
+export interface InboxActivity {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description: string;
+  timestamp: Date;
+  read: boolean;
+  archived: boolean;
+  
+  // Actor information
+  actor: {
+    id: string;
+    name: string;
+    avatar?: string;
+    initials: string;
+  };
+  
+  // Context
+  project?: {
+    id: string;
+    name: string;
+  };
+  task?: {
+    id: string;
+    title: string;
+    status?: TaskStatus;
+  };
+  asset?: {
+    id: string;
+    name: string;
+  };
+  
+  // Activity-specific data
+  metadata: ActivityMetadata;
+  
+  // Actions
+  primaryAction?: InboxAction;
+  secondaryActions?: InboxAction[];
+}
+
+export type ActivityType =
+  | 'mention'           // @mentioned in comment/description
+  | 'task_assigned'     // Assigned to a task
+  | 'task_status'       // Task status changed
+  | 'project_update'    // Project milestone/update
+  | 'comment'           // New comment on followed item
+  | 'asset_approved'    // Asset approval
+  | 'asset_rejected'    // Asset rejection
+  | 'clearance_needed'  // Action required for clearance
+  | 'team_invite'       // Added to team/project
+  | 'deadline_approaching'; // Due date reminder
+
+export interface ActivityMetadata {
+  // For mentions
+  mentionContext?: string;  // Surrounding text
+  
+  // For status changes
+  oldStatus?: string;
+  newStatus?: string;
+  
+  // For comments
+  commentText?: string;
+  commentId?: string;
+  
+  // For approvals/rejections
+  reviewerName?: string;
+  feedback?: string;
+  
+  // Generic
+  [key: string]: any;
+}
+
+export interface InboxAction {
+  label: string;
+  href?: string;
+  onClick?: () => void;
+  variant?: 'default' | 'outline' | 'ghost';
+}

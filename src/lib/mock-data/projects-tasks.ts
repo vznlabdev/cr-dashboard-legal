@@ -1,0 +1,1072 @@
+// Mock data for Companies, Projects, Task Groups, and Tasks
+// This will be replaced with API calls in production
+
+import type { Company, Project, TaskGroup, Task } from "@/types"
+import { getSampleMediaData } from "@/lib/mockData/initialStates"
+
+// =============================================================================
+// COMPANIES DATA
+// =============================================================================
+
+export const mockCompanies: Company[] = [
+  {
+    id: 'company-1',
+    name: 'Acme Corporation',
+    logo_url: 'https://placehold.co/200x200/3b82f6/white?text=ACME',
+    branding_colors: '#3b82f6,#1e3a5f,#f97316',
+    timezone: 'America/New_York',
+    status: 'active',
+    created_at: '2024-01-15T00:00:00Z',
+    updated_at: '2024-12-01T00:00:00Z',
+    copyrightCheckCredits: {
+      monthlyQuota: 100,
+      quotaUsed: 55,
+      quotaRemaining: 45,
+      additionalCredits: 20,
+      resetDate: new Date('2026-02-01T00:00:00Z'),
+      pricePerCheck: 0.50,
+    },
+  },
+  {
+    id: 'company-2',
+    name: 'TechStart Inc',
+    logo_url: 'https://placehold.co/200x200/8b5cf6/white?text=TS',
+    branding_colors: '#8b5cf6,#4c1d95,#ec4899',
+    timezone: 'America/Los_Angeles',
+    status: 'active',
+    created_at: '2024-03-10T00:00:00Z',
+    updated_at: '2024-12-05T00:00:00Z',
+    copyrightCheckCredits: {
+      monthlyQuota: 50,
+      quotaUsed: 12,
+      quotaRemaining: 38,
+      additionalCredits: 0,
+      resetDate: new Date('2026-02-01T00:00:00Z'),
+      pricePerCheck: 0.50,
+    },
+  },
+]
+
+// =============================================================================
+// PROJECTS DATA
+// =============================================================================
+
+export const mockProjects: Project[] = [
+  {
+    id: '1',
+    companyId: 'company-1',  // belongs to Acme Corporation
+    name: 'Summer Campaign 2024',
+    description: 'AI-generated marketing content for Q3 summer campaign',
+    status: 'Active',
+    priority: 'high',
+    assets: 4,
+    compliance: 92,
+    risk: 'Low',
+    updated: '2 hours ago',
+    createdDate: 'June 15, 2024',
+    owner: 'Jeff Gordon',
+    creatorIds: ['creator-1', 'creator-2'],
+    updates: [
+      {
+        id: 'update-1',
+        projectId: '1',
+        content: 'Design phase completed ahead of schedule. Moving to development next week. The team has done an excellent job refining the brand guidelines and creating the initial asset library.',
+        healthStatus: 'on-track',
+        author: { name: 'Jeff Gordon', initials: 'JG', color: '#ef4444' },
+        timestamp: new Date('2025-01-28T14:30:00Z'),
+        metadata: {
+          status: 'Active',
+          lead: 'Jeff Gordon',
+          targetDate: 'Feb 28, 2025',
+          progress: '35%'
+        }
+      },
+      {
+        id: 'update-2',
+        projectId: '1',
+        content: 'Initial wireframes approved by stakeholders. Starting the design iteration phase.',
+        healthStatus: 'on-track',
+        author: { name: 'Jeff Gordon', initials: 'JG', color: '#ef4444' },
+        timestamp: new Date('2025-01-20T10:15:00Z'),
+        metadata: {
+          status: 'Active',
+          lead: 'Jeff Gordon',
+          targetDate: 'Feb 28, 2025',
+          progress: '20%'
+        }
+      }
+    ]
+  },
+  {
+    id: '2',
+    companyId: 'company-1',  // belongs to Acme Corporation
+    name: 'Product Launch Video',
+    description: 'Promotional video with AI-enhanced visuals and voiceover',
+    status: 'Review',
+    priority: 'urgent',
+    assets: 2,
+    compliance: 78,
+    risk: 'Medium',
+    updated: '5 hours ago',
+    createdDate: 'July 8, 2024',
+    owner: 'Abdul Qadeer',
+    creatorIds: ['creator-1'],
+    updates: [
+      {
+        id: 'update-3',
+        projectId: '2',
+        content: 'Video production is behind schedule due to voiceover delays. Working with the vendor to expedite the process. May need to adjust launch date.',
+        healthStatus: 'at-risk',
+        author: { name: 'Abdul Qadeer', initials: 'AQ', color: '#a855f7' },
+        timestamp: new Date('2025-01-29T16:45:00Z'),
+        metadata: {
+          status: 'Review',
+          lead: 'Abdul Qadeer',
+          targetDate: 'Feb 15, 2025',
+          progress: '60%'
+        }
+      }
+    ]
+  },
+  {
+    id: '3',
+    companyId: 'company-2',  // belongs to TechStart Inc
+    name: 'Brand Refresh Campaign',
+    description: 'Complete brand refresh campaign with new visual identity',
+    status: 'Active',
+    priority: 'medium',
+    assets: 8,
+    compliance: 85,
+    risk: 'Medium',
+    updated: '1 day ago',
+    createdDate: 'August 1, 2024',
+    owner: 'Asad',
+    creatorIds: ['creator-3'],
+  },
+]
+
+// =============================================================================
+// TASK GROUPS DATA
+// =============================================================================
+
+export const mockTaskGroups: TaskGroup[] = [
+  // Task Groups for Project 1: Summer Campaign 2024
+  {
+    id: 'tg-1',
+    projectId: '1',
+    name: 'Social Media Assets',
+    description: 'Instagram, Facebook, and Twitter campaign materials',
+    color: '#3b82f6',  // blue
+    displayOrder: 1,
+    createdBy: 'Sarah Johnson',
+    createdAt: '2024-06-15T10:00:00Z',
+    updatedAt: '2024-06-20T14:30:00Z',
+  },
+  {
+    id: 'tg-2',
+    projectId: '1',
+    name: 'Print Materials',
+    description: 'Brochures, flyers, and outdoor advertising',
+    color: '#8b5cf6',  // purple
+    displayOrder: 2,
+    createdBy: 'Sarah Johnson',
+    createdAt: '2024-06-15T10:15:00Z',
+    updatedAt: '2024-06-18T09:20:00Z',
+  },
+  {
+    id: 'tg-3',
+    projectId: '1',
+    name: 'Legal & Compliance',
+    description: 'Copyright, trademark, and regulatory review tasks',
+    color: '#f59e0b',  // amber
+    displayOrder: 3,
+    createdBy: 'Legal Team',
+    createdAt: '2024-06-16T08:00:00Z',
+    updatedAt: '2024-06-22T11:45:00Z',
+  },
+  
+  // Task Groups for Project 2: Product Launch Video
+  {
+    id: 'tg-4',
+    projectId: '2',
+    name: 'Video Production',
+    description: 'Filming, editing, and post-production tasks',
+    color: '#ec4899',  // pink
+    displayOrder: 1,
+    createdBy: 'Michael Chen',
+    createdAt: '2024-07-08T09:00:00Z',
+    updatedAt: '2024-07-15T16:30:00Z',
+  },
+  {
+    id: 'tg-5',
+    projectId: '2',
+    name: 'Distribution & Marketing',
+    description: 'Platform uploads, promotional materials, and ad campaigns',
+    color: '#10b981',  // green
+    displayOrder: 2,
+    createdBy: 'Marketing Team',
+    createdAt: '2024-07-08T09:30:00Z',
+    updatedAt: '2024-07-20T10:15:00Z',
+  },
+  
+  // Task Groups for Project 3: Brand Refresh Campaign
+  {
+    id: 'tg-6',
+    projectId: '3',
+    name: 'Brand Identity Design',
+    description: 'Logo, color palette, typography, and brand guidelines',
+    color: '#6366f1',  // indigo
+    displayOrder: 1,
+    createdBy: 'Emily Rodriguez',
+    createdAt: '2024-08-01T10:00:00Z',
+    updatedAt: '2024-08-10T14:00:00Z',
+  },
+  {
+    id: 'tg-7',
+    projectId: '3',
+    name: 'Website Redesign',
+    description: 'New website design and development',
+    color: '#14b8a6',  // teal
+    displayOrder: 2,
+    createdBy: 'Emily Rodriguez',
+    createdAt: '2024-08-01T10:30:00Z',
+    updatedAt: '2024-08-15T09:45:00Z',
+  },
+  {
+    id: 'tg-8',
+    projectId: '3',
+    name: 'Trade Show Materials',
+    description: 'Booth design, banners, and promotional items',
+    color: '#f97316',  // orange
+    displayOrder: 3,
+    createdBy: 'Events Team',
+    createdAt: '2024-08-05T11:00:00Z',
+    updatedAt: '2024-08-20T13:20:00Z',
+  },
+]
+
+// =============================================================================
+// TASKS DATA
+// =============================================================================
+
+export const mockTasks: Task[] = [
+  // Tasks for Task Group 1: Social Media Assets (Project 1)
+  {
+    id: 'task-1',
+    taskGroupId: 'tg-1',
+    projectId: '1',
+    title: 'Design hero image',
+    status: 'production',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 20, 2024',
+    createdDate: '2024-12-01T00:00:00Z',
+    updatedAt: '2024-12-15T18:00:00Z',  // 3 hours ago
+    mode: 'generative',
+    intendedUses: ['Social Media', 'Advertising/Campaigns', 'Web'],
+    deliverableType: 'Social Media',
+    targetAudience: 'B2B decision makers, C-suite executives in mid-size tech companies',
+    clientVisibility: 'visible',
+    estimatedHours: 8,
+    isBillable: true,
+    aiWorkflowStep: 2, // On "Select AI Tool" step
+    completedSteps: [1], // Step 1 complete
+    mediaData: {
+      ...getSampleMediaData('ai-generated'),
+      assets: [
+        {
+          id: 'asset-4',
+          filename: 'Logo - Primary.svg',
+          fileType: 'image/svg+xml',
+          fileSize: 45000,
+          thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
+          clearanceStatus: 'cleared' as const,
+          source: 'library' as const,
+          uploadedAt: new Date('2025-12-02')
+        }
+      ]
+    },
+    workflowTemplateId: 'wf-social-images',
+  },
+  {
+    id: 'task-2',
+    taskGroupId: 'tg-1',
+    projectId: '1',
+    title: 'Write copy variations',
+    status: 'submitted',
+    assignee: 'Mike Johnson',
+    dueDate: 'Dec 18, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
+    updatedAt: '2024-12-14T21:00:00Z',  // 1 day ago
+  },
+  {
+    id: 'task-9',
+    taskGroupId: 'tg-1',
+    projectId: '1',
+    title: 'Create Instagram stories',
+    status: 'assigned',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 21, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
+    updatedAt: '2024-12-15T19:00:00Z',  // 2 hours ago
+    mode: 'assisted',
+    intendedUses: ['Social Media', 'Internal'],
+    deliverableType: 'Social Media',
+    targetAudience: 'Young professionals aged 25-40, tech enthusiasts and early adopters',
+    clientVisibility: 'comment',
+    estimatedHours: 4,
+    isBillable: false,
+    aiWorkflowStep: 3, // On "Create Prompt" step
+    aiTool: 'ChatGPT',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2], // Steps 1 & 2 complete
+    mediaData: {
+      ...getSampleMediaData('ai-enhanced'),
+      assets: [
+        {
+          id: 'asset-4',
+          filename: 'Logo - Primary.svg',
+          fileType: 'image/svg+xml',
+          fileSize: 45000,
+          thumbnailUrl: 'https://picsum.photos/seed/asset4/400/300',
+          clearanceStatus: 'cleared' as const,
+          source: 'library' as const,
+          uploadedAt: new Date('2025-12-02')
+        }
+      ]
+    },
+    workflowTemplateId: 'wf-social-images',
+  },
+  {
+    id: 'task-10',
+    taskGroupId: 'tg-1',
+    projectId: '1',
+    title: 'Design Facebook ad variants',
+    status: 'qa_review',
+    assignee: 'QA Team',
+    dueDate: 'Dec 19, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
+    updatedAt: '2024-12-15T17:00:00Z',  // 4 hours ago
+  },
+  {
+    id: 'task-11',
+    taskGroupId: 'tg-1',
+    projectId: '1',
+    title: 'Twitter banner design',
+    status: 'delivered',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 15, 2024',
+    createdDate: '2024-11-30T00:00:00Z',
+    updatedAt: '2024-12-12T21:00:00Z',  // 3 days ago
+  },
+  
+  // Tasks for Task Group 2: Print Materials (Project 1)
+  {
+    id: 'task-12',
+    taskGroupId: 'tg-2',
+    projectId: '1',
+    title: 'Design brochure layout',
+    status: 'compliance',
+    assignee: 'Print Team',
+    dueDate: 'Dec 23, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
+    updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
+    mode: 'generative',
+    intendedUses: ['Print', 'Advertising/Campaigns', 'Internal'],
+    mediaData: getSampleMediaData('ai-generated'),
+    deliverableType: 'Print',
+    aiWorkflowStep: 5, // On "Upload Output" step
+    aiTool: 'Midjourney',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4], // Steps 1-4 complete
+    targetAudience: 'Business professionals attending tech conferences',
+    estimatedHours: 6,
+    isBillable: true,
+    creatorIds: ['creator-1', 'creator-3'],
+  },
+  {
+    id: 'task-13',
+    taskGroupId: 'tg-2',
+    projectId: '1',
+    title: 'Create outdoor billboard',
+    status: 'production',
+    assignee: 'Design Team',
+    dueDate: 'Dec 28, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
+    updatedAt: '2024-12-15T20:30:00Z',  // 30 minutes ago
+    mode: 'generative',
+    intendedUses: ['Advertising/Campaigns', 'Print'],
+    deliverableType: 'Print',
+    aiWorkflowStep: 6, // On "Review & Iterate" step
+    aiTool: 'DALL-E 3',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4, 5], // Steps 1-5 complete
+    targetAudience: 'Commuters and general public in urban areas',
+    estimatedHours: 10,
+    isBillable: true,
+    creatorIds: ['creator-2'],
+    clearanceRejection: {
+      rejectedBy: 'legal',
+      rejectedAsset: 'hero_image_v1.png',
+      rejectedAssetId: 'asset-billboard-001',
+      feedback: 'Font licensing unclear. Need proof of commercial license for typography used.',
+      rejectedAt: '2024-01-25T14:45:00Z',
+    },
+  },
+  
+  // Tasks for Task Group 3: Legal & Compliance (Project 1)
+  {
+    id: 'task-3',
+    taskGroupId: 'tg-3',
+    projectId: '1',
+    title: 'Review trademark usage',
+    status: 'compliance',
+    assignee: 'Legal Team',
+    dueDate: 'Dec 22, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
+    updatedAt: '2024-12-15T16:00:00Z',  // 5 hours ago
+    mode: 'generative',
+    workflowTemplateId: 'wf-quick-image',
+  },
+  {
+    id: 'task-4',
+    taskGroupId: 'tg-3',
+    projectId: '1',
+    title: 'Verify AI content provenance',
+    status: 'delivered',
+    assignee: 'Insurance Analyst',
+    dueDate: 'Dec 25, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
+    updatedAt: '2024-12-13T21:00:00Z',  // 2 days ago
+    mode: 'generative',
+    intendedUses: ['Editorial', 'Internal'],
+    deliverableType: 'Document',
+    aiWorkflowStep: 7, // On "Submit for Clearance" step (awaiting review)
+    aiTool: 'Claude',
+    aiTrackingLevel: 'full',
+    completedSteps: [1, 2, 3, 4, 5, 6], // All steps before 7 complete
+    targetAudience: 'Internal compliance and legal teams',
+    estimatedHours: 3,
+    isBillable: false,
+  },
+  
+  // Tasks for Task Group 4: Video Production (Project 2)
+  {
+    id: 'task-5',
+    taskGroupId: 'tg-4',
+    projectId: '2',
+    title: 'Edit product demo',
+    status: 'production',
+    assignee: 'Emily Davis',
+    dueDate: 'Dec 15, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
+    updatedAt: '2024-12-15T17:00:00Z',  // 4 hours ago
+    mode: 'assisted',
+    intendedUses: ['Video', 'Advertising/Campaigns'],
+    deliverableType: 'Video',
+  },
+  {
+    id: 'task-6',
+    taskGroupId: 'tg-4',
+    projectId: '2',
+    title: 'Add background music',
+    status: 'production',
+    assignee: 'Audio Team',
+    dueDate: 'Dec 16, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
+    updatedAt: '2024-12-15T15:00:00Z',  // 6 hours ago
+  },
+  {
+    id: 'task-14',
+    taskGroupId: 'tg-4',
+    projectId: '2',
+    title: 'Color grading and effects',
+    status: 'qa_review',
+    assignee: 'QA Team',
+    dueDate: 'Dec 17, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
+    updatedAt: '2024-12-15T13:00:00Z',  // 8 hours ago
+  },
+  
+  // Tasks for Task Group 5: Distribution & Marketing (Project 2)
+  {
+    id: 'task-15',
+    taskGroupId: 'tg-5',
+    projectId: '2',
+    title: 'Upload to YouTube',
+    status: 'assigned',
+    assignee: 'Marketing Team',
+    dueDate: 'Dec 18, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
+    updatedAt: '2024-12-15T19:00:00Z',  // 2 hours ago
+  },
+  {
+    id: 'task-16',
+    taskGroupId: 'tg-5',
+    projectId: '2',
+    title: 'Create promotional thumbnails',
+    status: 'delivered',
+    assignee: 'Design Team',
+    dueDate: 'Dec 14, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
+    updatedAt: '2024-12-11T21:00:00Z',  // 4 days ago
+  },
+  
+  // Tasks for Task Group 6: Brand Identity Design (Project 3)
+  {
+    id: 'task-7',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design new logo concepts',
+    status: 'qa_review',
+    assignee: 'Design Team',
+    dueDate: 'Dec 10, 2024',
+    createdDate: '2024-11-28T00:00:00Z',
+    updatedAt: '2026-01-27T17:15:00Z',  // 4h ago
+    mode: 'generative',
+    commentsCount: 15,
+    attachmentsCount: 8,
+    workflowTemplateId: 'wf-campaign-bundle',
+  },
+  {
+    id: 'task-8',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Trademark search for new logo',
+    status: 'compliance',
+    assignee: 'Legal Team',
+    dueDate: '2026-01-20T00:00:00Z',  // Overdue (7 days ago)
+    createdDate: '2024-11-30T00:00:00Z',
+    updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
+    mode: 'manual',
+    intendedUses: ['Internal'],
+    deliverableType: 'Legal Review',
+    commentsCount: 3,
+    attachmentsCount: 1,
+  },
+  {
+    id: 'task-17',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Define brand color palette',
+    status: 'delivered',
+    assignee: 'Design Team',
+    dueDate: 'Dec 5, 2024',
+    createdDate: '2024-11-25T00:00:00Z',
+    updatedAt: '2024-12-10T21:00:00Z',  // 5 days ago
+  },
+  
+  // Tasks for Task Group 8: Trade Show Materials (Project 3)
+  {
+    id: 'task-18',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design booth layout',
+    status: 'production',
+    assignee: 'Events Team',
+    dueDate: 'Dec 30, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
+    updatedAt: '2024-12-15T20:00:00Z',  // 1 hour ago
+  },
+  {
+    id: 'task-19',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Create promotional banners',
+    status: 'assigned',
+    assignee: 'Print Team',
+    dueDate: 'Dec 28, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
+    updatedAt: '2024-12-15T18:00:00Z',  // 3 hours ago
+  },
+  
+  // Additional Tasks for Project 3 - Brand Identity Design Group (tg-6)
+  {
+    id: 'task-20',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Create typography guidelines',
+    status: 'submitted',
+    assignee: 'Design Team',
+    dueDate: 'Dec 22, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
+    updatedAt: '2026-01-27T18:52:00Z',  // 13 minutes ago
+    mode: 'assisted',
+    intendedUses: ['Print', 'Web', 'Internal'],
+    deliverableType: 'Print',
+    targetAudience: 'Marketing team and external partners',
+    clientVisibility: 'comment',  // Client can comment - shows green badge
+    commentsCount: 8,
+    attachmentsCount: 2,
+  },
+  {
+    id: 'task-21',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design business card templates',
+    status: 'submitted',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 20, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
+    updatedAt: '2026-01-27T19:05:00Z',  // 2h ago
+    mode: 'generative',
+    intendedUses: ['Print', 'Internal'],
+    deliverableType: 'Print',
+    aiWorkflowStep: 3,
+    commentsCount: 5,
+  },
+  {
+    id: 'task-22',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Create letterhead design',
+    status: 'compliance',
+    assignee: 'Mike Johnson',
+    dueDate: 'Dec 21, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
+    updatedAt: '2026-01-27T18:30:00Z',  // 35 minutes ago
+    mode: 'generative',
+    intendedUses: ['Print', 'Internal'],
+    deliverableType: 'Print',
+    targetAudience: 'Corporate communications and legal dept',
+    aiWorkflowStep: 5,
+    clientVisibility: 'visible',  // Client can see - shows blue badge
+    commentsCount: 12,
+    attachmentsCount: 5,
+    clearanceRejection: {
+      rejectedBy: 'legal',
+      rejectedAsset: 'letterhead_v1.pdf',
+      rejectedAssetId: 'asset-letterhead-001',
+      feedback: 'Font licensing needs verification',
+      rejectedAt: '2026-01-27T18:15:00Z',
+    },
+  },
+  {
+    id: 'task-23',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design email signature templates',
+    status: 'compliance',
+    assignee: 'Design Team',
+    dueDate: 'Dec 23, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
+    updatedAt: '2024-12-15T18:45:00Z',
+  },
+  {
+    id: 'task-24',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Verify logo copyright clearance',
+    status: 'compliance',
+    assignee: 'Legal Team',
+    dueDate: 'Dec 19, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
+    updatedAt: '2024-12-15T17:30:00Z',
+  },
+  {
+    id: 'task-25',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Create brand style guide',
+    status: 'production',
+    assignee: 'Emily Davis',
+    dueDate: 'Dec 24, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
+    updatedAt: '2024-12-15T16:00:00Z',
+  },
+  {
+    id: 'task-26',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design icon set',
+    status: 'production',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 25, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
+    updatedAt: '2024-12-15T15:30:00Z',
+  },
+  
+  // Additional Tasks for Website Redesign Group (tg-7)
+  {
+    id: 'task-27',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design homepage mockup',
+    status: 'submitted',
+    assignee: 'Web Design Team',
+    dueDate: 'Dec 26, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
+    updatedAt: '2024-12-15T22:00:00Z',
+    mode: 'assisted',
+    intendedUses: ['Web', 'Internal'],
+    deliverableType: 'Web',
+  },
+  {
+    id: 'task-28',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Create product page templates',
+    status: 'submitted',
+    assignee: 'Design Team',
+    dueDate: 'Dec 27, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
+    updatedAt: '2024-12-15T21:45:00Z',
+  },
+  {
+    id: 'task-29',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design mobile navigation',
+    status: 'submitted',
+    assignee: 'UX Team',
+    dueDate: 'Dec 24, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
+    updatedAt: '2024-12-15T21:30:00Z',
+  },
+  {
+    id: 'task-30',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Create contact form design',
+    status: 'compliance',
+    assignee: 'Web Design Team',
+    dueDate: 'Dec 22, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
+    updatedAt: '2024-12-15T20:15:00Z',
+  },
+  {
+    id: 'task-31',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design footer layout',
+    status: 'assigned',
+    assignee: 'Design Team',
+    dueDate: 'Dec 23, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
+    updatedAt: '2024-12-15T19:45:00Z',
+  },
+  {
+    id: 'task-32',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Create hero section variants',
+    status: 'assigned',
+    assignee: 'Sarah Chen',
+    dueDate: 'Dec 21, 2024',
+    createdDate: '2024-12-09T00:00:00Z',
+    updatedAt: '2024-12-15T19:00:00Z',
+  },
+  {
+    id: 'task-33',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design about page layout',
+    status: 'production',
+    assignee: 'Mike Johnson',
+    dueDate: 'Dec 26, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
+    updatedAt: '2024-12-15T18:30:00Z',
+  },
+  {
+    id: 'task-34',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Create blog layout templates',
+    status: 'production',
+    assignee: 'Design Team',
+    dueDate: 'Dec 25, 2024',
+    createdDate: '2024-12-06T00:00:00Z',
+    updatedAt: '2024-12-15T17:45:00Z',
+  },
+  {
+    id: 'task-35',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design 404 error page',
+    status: 'qa_review',
+    assignee: 'QA Team',
+    dueDate: 'Dec 20, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
+    updatedAt: '2024-12-15T16:30:00Z',
+  },
+  {
+    id: 'task-36',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Create loading animations',
+    status: 'qa_review',
+    assignee: 'Animation Team',
+    dueDate: 'Dec 21, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
+    updatedAt: '2024-12-15T15:45:00Z',
+  },
+  {
+    id: 'task-37',
+    taskGroupId: 'tg-7',
+    projectId: '3',
+    title: 'Design testimonials section',
+    status: 'delivered',
+    assignee: 'Design Team',
+    dueDate: 'Dec 18, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
+    updatedAt: '2024-12-14T21:00:00Z',
+  },
+  
+  // Additional Tasks for Trade Show Materials (tg-8)
+  {
+    id: 'task-38',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design trade show booth graphics',
+    status: 'submitted',
+    assignee: 'Events Team',
+    dueDate: 'Dec 29, 2024',
+    createdDate: '2024-12-13T00:00:00Z',
+    updatedAt: '2024-12-15T22:15:00Z',
+    mode: 'generative',
+    intendedUses: ['Advertising/Campaigns', 'Print', 'Internal'],
+    deliverableType: 'Print',
+  },
+  {
+    id: 'task-39',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Create product catalog',
+    status: 'compliance',
+    assignee: 'Print Team',
+    dueDate: 'Dec 27, 2024',
+    createdDate: '2024-12-12T00:00:00Z',
+    updatedAt: '2024-12-15T21:15:00Z',
+  },
+  {
+    id: 'task-40',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design giveaway items',
+    status: 'compliance',
+    assignee: 'Design Team',
+    dueDate: 'Dec 26, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
+    updatedAt: '2024-12-15T20:45:00Z',
+  },
+  {
+    id: 'task-41',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Create signage designs',
+    status: 'assigned',
+    assignee: 'Events Team',
+    dueDate: 'Dec 28, 2024',
+    createdDate: '2024-12-10T00:00:00Z',
+    updatedAt: '2024-12-15T19:15:00Z',
+  },
+  {
+    id: 'task-42',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design presentation slides',
+    status: 'production',
+    assignee: 'Presentation Team',
+    dueDate: 'Dec 30, 2024',
+    createdDate: '2024-12-08T00:00:00Z',
+    updatedAt: '2024-12-15T18:00:00Z',
+  },
+  {
+    id: 'task-43',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Create promotional video',
+    status: 'production',
+    assignee: 'Video Team',
+    dueDate: 'Dec 31, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
+    updatedAt: '2024-12-15T17:00:00Z',
+  },
+  {
+    id: 'task-44',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design booth backdrop',
+    status: 'qa_review',
+    assignee: 'QA Team',
+    dueDate: 'Dec 25, 2024',
+    createdDate: '2024-12-05T00:00:00Z',
+    updatedAt: '2024-12-15T16:15:00Z',
+  },
+  {
+    id: 'task-45',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Review booth materials compliance',
+    status: 'qa_review',
+    assignee: 'Legal Team',
+    dueDate: 'Dec 24, 2024',
+    createdDate: '2024-12-04T00:00:00Z',
+    updatedAt: '2024-12-15T15:00:00Z',
+  },
+  {
+    id: 'task-46',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Create handout materials',
+    status: 'delivered',
+    assignee: 'Print Team',
+    dueDate: 'Dec 19, 2024',
+    createdDate: '2024-12-03T00:00:00Z',
+    updatedAt: '2024-12-14T20:00:00Z',
+  },
+  {
+    id: 'task-47',
+    taskGroupId: 'tg-8',
+    projectId: '3',
+    title: 'Design name badges',
+    status: 'delivered',
+    assignee: 'Design Team',
+    dueDate: 'Dec 18, 2024',
+    createdDate: '2024-12-02T00:00:00Z',
+    updatedAt: '2024-12-13T21:00:00Z',
+  },
+  
+  // More tasks for Brand Identity (tg-6)
+  {
+    id: 'task-48',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design social media templates',
+    status: 'assigned',
+    assignee: 'Social Media Team',
+    dueDate: 'Dec 27, 2024',
+    createdDate: '2024-12-11T00:00:00Z',
+    updatedAt: '2024-12-15T20:00:00Z',
+    mode: 'generative',
+    intendedUses: ['Social Media', 'Advertising/Campaigns'],
+    deliverableType: 'Social Media',
+  },
+  {
+    id: 'task-49',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Create presentation deck template',
+    status: 'qa_review',
+    assignee: 'Design Team',
+    dueDate: 'Dec 22, 2024',
+    createdDate: '2024-12-07T00:00:00Z',
+    updatedAt: '2024-12-15T18:15:00Z',
+  },
+  {
+    id: 'task-50',
+    taskGroupId: 'tg-6',
+    projectId: '3',
+    title: 'Design packaging templates',
+    status: 'delivered',
+    assignee: 'Packaging Team',
+    dueDate: 'Dec 17, 2024',
+    createdDate: '2024-12-01T00:00:00Z',
+    updatedAt: '2024-12-12T20:00:00Z',
+  },
+]
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+// Company helpers
+export function getCompanyById(id: string): Company | undefined {
+  return mockCompanies.find((company) => company.id === id)
+}
+
+export function getAllCompanies(): Company[] {
+  return mockCompanies
+}
+
+// Project helpers
+export function getProjectById(id: string): Project | undefined {
+  return mockProjects.find((project) => project.id === id)
+}
+
+export function getProjectsByCompany(companyId: string): Project[] {
+  return mockProjects.filter((project) => project.companyId === companyId)
+}
+
+export function getAllProjects(): Project[] {
+  return mockProjects
+}
+
+// Task Group helpers
+export function getTaskGroupById(id: string): TaskGroup | undefined {
+  return mockTaskGroups.find((group) => group.id === id)
+}
+
+export function getTaskGroupsByProject(projectId: string): TaskGroup[] {
+  return mockTaskGroups
+    .filter((group) => group.projectId === projectId)
+    .sort((a, b) => a.displayOrder - b.displayOrder)
+}
+
+export function getAllTaskGroups(): TaskGroup[] {
+  return mockTaskGroups
+}
+
+// Task helpers
+export function getTaskById(id: string): Task | undefined {
+  return mockTasks.find((task) => task.id === id)
+}
+
+export function getTasksByProject(projectId: string): Task[] {
+  return mockTasks.filter((task) => task.projectId === projectId)
+}
+
+export function getTasksByTaskGroup(taskGroupId: string): Task[] {
+  return mockTasks.filter((task) => task.taskGroupId === taskGroupId)
+}
+
+export function getTaskCountByStatus(): Record<string, number> {
+  const counts: Record<string, number> = {
+    submitted: 0,
+    compliance: 0,
+    assigned: 0,
+    production: 0,
+    qa_review: 0,
+    delivered: 0,
+  }
+  
+  mockTasks.forEach((task) => {
+    counts[task.status] = (counts[task.status] || 0) + 1
+  })
+  
+  return counts
+}
+
+// Hierarchy navigation helpers
+export function getCompanyHierarchy(companyId: string) {
+  const company = getCompanyById(companyId)
+  if (!company) return null
+  
+  const projects = getProjectsByCompany(companyId)
+  const projectsWithGroups = projects.map((project) => ({
+    ...project,
+    taskGroups: getTaskGroupsByProject(project.id).map((group) => ({
+      ...group,
+      tasks: getTasksByTaskGroup(group.id),
+    })),
+  }))
+  
+  return {
+    company,
+    projects: projectsWithGroups,
+  }
+}
+
+export function getProjectHierarchy(projectId: string) {
+  const project = getProjectById(projectId)
+  if (!project) return null
+  
+  const taskGroups = getTaskGroupsByProject(projectId).map((group) => ({
+    ...group,
+    tasks: getTasksByTaskGroup(group.id),
+  }))
+  
+  return {
+    project,
+    taskGroups,
+  }
+}
