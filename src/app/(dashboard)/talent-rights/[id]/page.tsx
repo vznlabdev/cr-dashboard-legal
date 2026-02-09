@@ -92,7 +92,7 @@ const MICHAEL_CHEN_PROFILE = {
     { date: "2024-12-01", event: "Exclusivity check", detail: "Sportswear exclusivity (Adidas) confirmed; Nike non-exclusive" },
   ],
   riskAssessment: {
-    level: "Medium" as const,
+    level: "Medium" as "Low" | "Medium" | "High",
     factors: [
       "Multiple category exclusivities (Consumer Electronics: Samsung + Apple) — monitor campaign scope",
       "Six active or recent contracts — high volume of rights to track",
