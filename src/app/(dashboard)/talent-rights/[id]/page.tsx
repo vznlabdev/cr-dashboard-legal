@@ -108,9 +108,9 @@ function getCreatorById(id: string) {
 }
 
 function NilpStatusIcon({ status }: { status: "verified" | "pending" | "none" }) {
-  if (status === "verified") return <CheckCircle2 className="h-5 w-5 text-emerald-500" title="Verified" />
-  if (status === "pending") return <Clock className="h-5 w-5 text-amber-500" title="Pending" />
-  return <Circle className="h-5 w-5 text-muted-foreground/50" title="Not Granted" />
+  if (status === "verified") return <span title="Verified"><CheckCircle2 className="h-5 w-5 text-emerald-500" /></span>
+  if (status === "pending") return <span title="Pending"><Clock className="h-5 w-5 text-amber-500" /></span>
+  return <span title="Not Granted"><Circle className="h-5 w-5 text-muted-foreground/50" /></span>
 }
 
 export default function TalentRightsDetailPage({

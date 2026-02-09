@@ -236,9 +236,9 @@ const MOCK_ITEMS: ReviewItem[] = [
 ]
 
 const PRIORITY_ICON: Record<Priority, React.ReactNode> = {
-  high: <CircleAlert className="h-4 w-4 text-red-500" title="High" />,
-  medium: <CircleDot className="h-4 w-4 text-amber-500" title="Medium" />,
-  low: <CircleCheck className="h-4 w-4 text-emerald-500" title="Low" />,
+  high: <span title="High"><CircleAlert className="h-4 w-4 text-red-500" /></span>,
+  medium: <span title="Medium"><CircleDot className="h-4 w-4 text-amber-500" /></span>,
+  low: <span title="Low"><CircleCheck className="h-4 w-4 text-emerald-500" /></span>,
 }
 
 const STATUS_STYLE: Record<ReviewStatus, string> = {
